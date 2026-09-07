@@ -1,5 +1,7 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from parser.csv_parser import parse_csv
+
 
 app = FastAPI(title="Attack Atlas API")
 
@@ -29,13 +31,15 @@ def health():
         "status": "ok"
     }
 
-
 @app.post("/upload")
 async def upload_log(file: UploadFile = File(...)):
+    # Reactから送られてきたファイルを読み込む
     content = await file.read()
+
+    # CSVを解析
+    events = parse_csv(content)
 
     return {
         "filename": file.filename,
-        "size": len(content),
-        "message": "File received successfully!"
+        "events": events
     }
