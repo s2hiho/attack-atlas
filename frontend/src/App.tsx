@@ -86,7 +86,22 @@ function App() {
         {/* インシデント概要カード */}
         <section className="card summary-card">
           <h2>📊 Incident Summary</h2>
+          
+          {events.length === 0 ? (
           <p>No incident loaded.</p>
+          ) : (
+            <>
+              <p><strong>Loaded file:</strong> {selectedFile?.name}</p>
+              <p><strong>Total events:</strong> {events.length}</p>
+
+              <p><strong>Sources:</strong></p>
+              <ul>
+                {[...new Set(events.map((event) => event.Source))].map((source) => (
+                  <li key={source}>{source}</li>
+                ))}
+              </ul>
+            </>
+          )}
         </section>
 
         {/* タイムラインカード */}
