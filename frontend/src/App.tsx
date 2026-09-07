@@ -1,122 +1,105 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useState } from "react";
+import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0)
+  // ユーザーが選択したログファイルを保存する
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  // アップロード結果（ファイル名やサイズ）を画面に表示する
+  const [uploadResult, setUploadResult] = useState("");
+
+  // FastAPIへログファイルを送信する関数
+  const uploadFile = async () => {
+    // ファイルが選択されていなければ処理を止める
+    if (!selectedFile) {
+      alert("ファイルを選択してください");
+      return;
+    }
+
+    // ファイルを送るための箱（FormData）を作成
+    const formData = new FormData();
+
+    // "file" という名前でファイルを追加
+    // FastAPI側の upload_log(file=...) と対応している
+    formData.append("file", selectedFile);
+
+    try {
+      // FastAPIの /upload APIへ POST リクエストを送る
+      const response = await fetch("http://127.0.0.1:8000/upload", {
+        method: "POST",
+        body: formData,
+      });
+      
+      console.log("Status:", response.status);
+
+      // FastAPIから返ってきたJSONを受け取る
+      const data = await response.json();
+      console.log("Response:", data);
+
+      // 結果を画面に表示する
+      setUploadResult(
+        `${data.filename} (${data.size} bytes) を受信しました`
+      );
+    } catch (error) {
+      // 通信に失敗した場合
+      setUploadResult("アップロードに失敗しました。FastAPIが起動しているか確認してください。");
+      console.error(error);
+    }
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app">
+      {/* ヘッダー */}
+      <header className="header">
+        <h1>🛡️ Attack Atlas</h1>
+        <p>DFIR Visualization Platform for MWS Hackathon</p>
+      </header>
 
-      <div className="ticks"></div>
+      {/* ダッシュボード */}
+      <main className="dashboard">
+        {/* ログアップロードカード */}
+        <section className="card upload-card">
+          <h2>📂 Log Upload</h2>
+          <p>Upload Windows Event Log, Sysmon, DNS or Firewall logs.</p>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          {/* ログファイルを選択する */}
+          <input
+            type="file"
+            onChange={(e) => {
+              if (e.target.files && e.target.files.length > 0) {
+                // 選択した最初のファイルを保存
+                setSelectedFile(e.target.files[0]);
+              }
+            }}
+          />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+          {/* FastAPIへアップロード */}
+          <button onClick={uploadFile}>Upload Log</button>
+
+          {/* アップロード結果を表示 */}
+          <p>{uploadResult}</p>
+        </section>
+
+        {/* インシデント概要カード */}
+        <section className="card summary-card">
+          <h2>📊 Incident Summary</h2>
+          <p>No incident loaded.</p>
+        </section>
+
+        {/* タイムラインカード */}
+        <section className="card timeline-card">
+          <h2>🕒 Attack Timeline</h2>
+          <p>Timeline will appear here.</p>
+        </section>
+
+        {/* MITRE ATT&CKカード */}
+        <section className="card mitre-card">
+          <h2>🎯 MITRE ATT&CK</h2>
+          <p>Techniques detected from uploaded logs.</p>
+        </section>
+      </main>
+    </div>
+  );
 }
 
-export default App
+export default App;
