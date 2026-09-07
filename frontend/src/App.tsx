@@ -7,7 +7,9 @@ function App() {
 
   // アップロード結果（ファイル名やサイズ）を画面に表示する
   const [uploadResult, setUploadResult] = useState("");
-
+  
+  // CSVから読み込んだイベント一覧を保存する
+  const [events, setEvents] = useState<any[]>([]);
   // FastAPIへログファイルを送信する関数
   const uploadFile = async () => {
     // ファイルが選択されていなければ処理を止める
@@ -36,10 +38,11 @@ function App() {
       const data = await response.json();
       console.log("Response:", data);
 
-      // 結果を画面に表示する
-      setUploadResult(
-        `${data.filename} (${data.size} bytes) を受信しました`
-      );
+      // アップロード成功メッセージ
+      setUploadResult(`${data.filename} を読み込みました`);
+
+      // CSVイベント一覧を保存
+      setEvents(data.events);
     } catch (error) {
       // 通信に失敗した場合
       setUploadResult("アップロードに失敗しました。FastAPIが起動しているか確認してください。");
@@ -89,9 +92,33 @@ function App() {
         {/* タイムラインカード */}
         <section className="card timeline-card">
           <h2>🕒 Attack Timeline</h2>
-          <p>Timeline will appear here.</p>
+        
+          {events.length === 0 ? (
+            <p>No events loaded.</p>
+          ) : (
+            <table className="event-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>EventID</th>
+                  <th>Source</th>
+                  <th>Process</th>
+                </tr>
+              </thead>
+        
+              <tbody>
+                {events.map((event, index) => (
+                  <tr key={index}>
+                    <td>{event.Time}</td>
+                    <td>{event.EventID}</td>
+                    <td>{event.Source}</td>
+                    <td>{event.Process}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </section>
-
         {/* MITRE ATT&CKカード */}
         <section className="card mitre-card">
           <h2>🎯 MITRE ATT&CK</h2>
