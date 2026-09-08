@@ -3,71 +3,92 @@ import ReactFlow, {
   Background,
   Controls,
   MiniMap,
-  type Edge,
+  MarkerType,
   type Node,
+  type Edge,
 } from "reactflow";
 import "reactflow/dist/style.css";
 
-// AttackGraph が受け取るデータの型
-interface AttackGraphProps {
-  events: any[];
+// Pythonから返ってくるノード
+interface RouteNode {
+  id: string;
+  label: string;
+  process: string;
+  time: string;
+  event_id: number;
+  severity: string;
 }
 
-function AttackGraph({ events }: AttackGraphProps) {
-  /*
-    CSVのイベント一覧(events)をReact Flowのノード(nodes)へ変換する。
-    今回は時系列順に横へ並べるだけ。
-  */
+// Pythonから返ってくるエッジ
+interface RouteEdge {
+  id: string;
+  source: string;
+  target: string;
+}
+
+interface AttackGraphProps {
+  route: {
+    nodes: RouteNode[];
+    edges: RouteEdge[];
+  };
+}
+
+function AttackGraph({ route }: AttackGraphProps) {
   const nodes: Node[] = useMemo(() => {
-    return events.map((event, index) => ({
-      id: String(index),
+    return route.nodes.map((node, index) => {
+      let color = "#64748B";
 
-      // ノードの中に表示する内容
-      data: {
-        label: (
-          <div>
-            <strong>{event.Process}</strong>
-            <br />
-            <small>{event.Time}</small>
-            <br />
-            EventID: {event.EventID}
-          </div>
-        ),
-      },
+      if (node.severity === "High") color = "#DC2626";
+      else if (node.severity === "Medium") color = "#F59E0B";
+      else if (node.severity === "Low") color = "#16A34A";
 
-      // 横方向に並べる（Google Mapsのルートのように）
-      position: {
-        x: index * 220,
-        y: 100,
-      },
+      return {
+        id: node.id,
+        position: { x: index * 250, y: 120 },
 
-      type: "default",
-    }));
-  }, [events]);
+        data: {
+          label: (
+            <div style={{ textAlign: "center" }}>
+              <strong>{node.label}</strong>
+              <br />
+              <small>{node.process}</small>
+              <br />
+              {node.time}
+            </div>
+          ),
+        },
 
-  /*
-    ノード同士を順番につなぐ線（エッジ）を作る。
-    Event1 → Event2 → Event3 ...
-  */
+        style: {
+          border: `2px solid ${color}`,
+          borderRadius: 12,
+          padding: 8,
+          width: 160,
+          background: "#1E293B",
+          color: "white",
+        },
+      };
+    });
+  }, [route]);
+
   const edges: Edge[] = useMemo(() => {
-    return events.slice(1).map((_, index) => ({
-      id: `e${index}-${index + 1}`,
-      source: String(index),
-      target: String(index + 1),
+    return route.edges.map((edge) => ({
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
       animated: true,
+      markerEnd: { type: MarkerType.ArrowClosed },
+      style: {
+        stroke: "#60A5FA",
+        strokeWidth: 2,
+      },
     }));
-  }, [events]);
+  }, [route]);
 
   return (
-    <div style={{ width: "100%", height: "420px" }}>
+    <div style={{ width: "100%", height: "450px" }}>
       <ReactFlow nodes={nodes} edges={edges} fitView>
-        {/* Google Mapsの背景っぽいグリッド */}
-        <Background gap={20} />
-
-        {/* ズーム・パンのコントロール */}
+        <Background gap={20} color="#334155" />
         <Controls />
-
-        {/* 左下のミニマップ */}
         <MiniMap />
       </ReactFlow>
     </div>

@@ -11,7 +11,15 @@ function App() {
   
   // CSVから読み込んだイベント一覧を保存する
   const [events, setEvents] = useState<any[]>([]);
-
+  const [route, setRoute] = useState({
+    nodes: [],
+    edges: [],
+  });
+  const [summary, setSummary] = useState({
+    filename: "",
+    total_events: 0,
+    sources: [],
+  });
   // EventIDから重大度（Severity）を決める関数
   const getSeverity = (eventID: number) => {
     switch (eventID) {
@@ -56,12 +64,17 @@ function App() {
       // FastAPIから返ってきたJSONを受け取る
       const data = await response.json();
       console.log("Response:", data);
-
-      // アップロード成功メッセージ
-      setUploadResult(`${data.filename} を読み込みました`);
-
-      // CSVイベント一覧を保存
+      // Summaryを保存
+      setSummary(data.summary);
+      
+      // イベント一覧を保存
       setEvents(data.events);
+      
+      // Attack Routeを保存
+      setRoute(data.route);
+      
+      // 表示メッセージ
+      setUploadResult(`${data.summary.filename} を読み込みました`);
     } catch (error) {
       // 通信に失敗した場合
       setUploadResult("アップロードに失敗しました。FastAPIが起動しているか確認してください。");
@@ -105,17 +118,18 @@ function App() {
         {/* インシデント概要カード */}
         <section className="card summary-card">
           <h2>📊 Incident Summary</h2>
-          
-          {events.length === 0 ? (
-          <p>No incident loaded.</p>
+          {summary.filename === "" ? (
+            <p>No incident loaded.</p>
           ) : (
             <>
-              <p><strong>Loaded file:</strong> {selectedFile?.name}</p>
-              <p><strong>Total events:</strong> {events.length}</p>
-
+              <p><strong>Loaded file:</strong> {summary.filename}</p>
+          
+              <p><strong>Total events:</strong> {summary.total_events}</p>
+          
               <p><strong>Sources:</strong></p>
+          
               <ul>
-                {[...new Set(events.map((event) => event.Source))].map((source) => (
+                {summary.sources.map((source: string) => (
                   <li key={source}>{source}</li>
                 ))}
               </ul>
@@ -170,7 +184,7 @@ function App() {
           {events.length === 0 ? (
             <p>Upload a log to visualize the attack path.</p>
           ) : (
-            <AttackGraph events={events} />
+            <AttackGraph route={route} />
           )}
         </section>
         {/* MITRE ATT&CKカード */}
