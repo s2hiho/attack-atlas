@@ -160,17 +160,12 @@ function App() {
               </tbody>
             </table>
             
-            </>
-          )}
-        </section>
-        {/* Attack Graphカード */}
-        <section className="card graph-card">
-          <h2>🗺️ Attack Graph</h2>
-        
-          {events.length === 0 ? (
-            <p>Upload a log to visualize the attack path.</p>
-          ) : (
+            <hr style={{ margin: "24px 0", borderColor: "#334155" }} />
+
+            <h3>🗺️ Attack Graph</h3>
+
             <AttackGraph events={events} />
+            </>
           )}
         </section>
         {/* MITRE ATT&CKカード */}

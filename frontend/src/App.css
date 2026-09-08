@@ -84,6 +84,7 @@ button:disabled {
 /* タイムラインカードは横スクロール可能にする */
 .timeline-card {
   overflow-x: auto;
+  min-height: 320px;
 }
 
 /* テーブルがカード幅を超えないようにする */
@@ -120,4 +121,16 @@ button:disabled {
 .severity.info {
   background-color: #64748b;
   color: white;
+}
+/* ----------------------------- */
+/* Attack Graph カード */
+/* ----------------------------- */
+
+.graph-card {
+  grid-column: 1 / -1; /* グリッドの横幅を全部使う */
+  min-height: 560px;
+}
+
+.graph-card h2 {
+  margin-bottom: 16px;
 }
