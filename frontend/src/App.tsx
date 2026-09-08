@@ -10,6 +10,24 @@ function App() {
   
   // CSVから読み込んだイベント一覧を保存する
   const [events, setEvents] = useState<any[]>([]);
+
+  // EventIDから重大度（Severity）を決める関数
+  const getSeverity = (eventID: number) => {
+    switch (eventID) {
+      case 1:      // Process Create
+      case 4688:   // Windows Process Create
+        return "High";
+      case 3:      // Network Connection
+      case 22:     // DNS Query
+        return "Medium";
+      case 11:     // File Create
+        return "Low";
+      default:
+        return "Info";
+    }
+  };
+
+
   // FastAPIへログファイルを送信する関数
   const uploadFile = async () => {
     // ファイルが選択されていなければ処理を止める
@@ -116,6 +134,7 @@ function App() {
                 <tr>
                   <th>Time</th>
                   <th>EventID</th>
+                  <th>Severity</th>
                   <th>Source</th>
                   <th>Process</th>
                 </tr>
@@ -126,6 +145,12 @@ function App() {
                   <tr key={index}>
                     <td>{event.Time}</td>
                     <td>{event.EventID}</td>
+                    <td>
+                      <span className={`severity ${getSeverity(Number(event.EventID)).toLowerCase()}`}>
+                        {getSeverity(Number(event.EventID))}
+                      </span>
+                    </td>
+
                     <td>{event.Source}</td>
                     <td>{event.Process}</td>
                   </tr>

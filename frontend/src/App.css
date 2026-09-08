@@ -92,3 +92,32 @@ button:disabled {
   min-width: 400px;
   border-collapse: collapse;
 }
+
+/* Severityバッジ */
+.severity {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.severity.high {
+  background-color: #dc2626;
+  color: white;
+}
+
+.severity.medium {
+  background-color: #f59e0b;
+  color: black;
+}
+
+.severity.low {
+  background-color: #16a34a;
+  color: white;
+}
+
+.severity.info {
+  background-color: #64748b;
+  color: white;
+}
