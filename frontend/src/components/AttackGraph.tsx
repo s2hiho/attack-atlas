@@ -42,9 +42,43 @@ function AttackGraph({ route }: AttackGraphProps) {
       else if (node.severity === "Medium") color = "#F59E0B";
       else if (node.severity === "Low") color = "#16A34A";
 
+        let x = 240;
+        let y = 120;
+        
+        switch (node.type) {
+          case "host":
+            x = 20;
+            y = 150;
+            break;
+        
+          case "process":
+            x = 260;
+            y = 20;
+            break;
+        
+          case "dns":
+            x = 260;
+            y = 150;
+            break;
+        
+          case "network":
+            x = 520;
+            y = 20;
+            break;
+        
+          case "file":
+            x = 520;
+            y = 180;
+            break;
+        
+          default:
+            x = 260;
+            y = 260;
+        }
+        
       return {
         id: node.id,
-        position: { x: index * 250, y: 120 },
+        position: { x, y },
 
         data: {
           label: (

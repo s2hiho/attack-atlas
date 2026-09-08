@@ -128,9 +128,22 @@ button:disabled {
 
 .graph-card {
   grid-column: 1 / -1; /* グリッドの横幅を全部使う */
-  min-height: 560px;
+  min-height: 650px;
 }
 
 .graph-card h2 {
   margin-bottom: 16px;
+}
+.react-flow {
+  background-color: #0f172a;
+  border-radius: 12px;
+}
+
+.react-flow__controls {
+  background: #1e293b;
+  border-radius: 10px;
+}
+
+.react-flow__minimap {
+  background: #111827;
 }
