@@ -2,71 +2,118 @@
 Attack Route Builder v2
 Host・Process・DNS・Network を枝分かれした Attack Graph に変換する。
 """
-
 def build_attack_route(events):
-
     nodes = []
     edges = []
+    node_map = {}
+    edge_count = 0
 
+    # Windowsホストを最初に追加
     host_id = "host"
-
-    # Hostノード（1台だけ仮定）
     nodes.append({
         "id": host_id,
-        "type": "host",
         "label": "Windows Host",
+        "process": "",
+        "time": "",
+        "event_id": 0,
         "severity": "Info",
+        "type": "host",
     })
 
-    for index, event in enumerate(events):
+    for event in events:
+        process = event.get("Process", "Unknown")
+        target = event.get("Target", "")
+        source = event.get("Source", "")
+        event_id = int(event.get("EventID", 0))
+        time = event.get("Time", "")
+        severity = event.get("Severity", "Info")
 
-        event_id = int(event["EventID"])
-        node_id = f"event-{index}"
+        # Processノード
+        process_id = f"process-{process}"
+        if process_id not in node_map:
+            node_map[process_id] = True
+            nodes.append({
+                "id": process_id,
+                "label": process,
+                "process": process,
+                "time": time,
+                "event_id": event_id,
+                "severity": severity,
+                "type": "process",
+            })
 
-        # イベント種類判定
-        if event_id in [1, 4688]:
-            category = "process"
-            label = event["Process"]
+            edges.append({
+                "id": f"e{edge_count}",
+                "source": host_id,
+                "target": process_id,
+            })
+            edge_count += 1
 
-        elif event_id == 22:
-            category = "dns"
-            label = event["Process"]
+        # DNSノード
+        if source == "DNS":
+            dns_id = f"dns-{target}"
+            if dns_id not in node_map:
+                node_map[dns_id] = True
+                nodes.append({
+                    "id": dns_id,
+                    "label": target,
+                    "process": process,
+                    "time": time,
+                    "event_id": event_id,
+                    "severity": severity,
+                    "type": "dns",
+                })
 
-        elif event_id == 3:
-            category = "network"
-            label = event["Process"]
+            edges.append({
+                "id": f"e{edge_count}",
+                "source": process_id,
+                "target": dns_id,
+            })
+            edge_count += 1
 
+        # Firewall / Networkノード
+        elif source == "Firewall":
+            network_id = f"net-{target}"
+            if network_id not in node_map:
+                node_map[network_id] = True
+                nodes.append({
+                    "id": network_id,
+                    "label": target,
+                    "process": process,
+                    "time": time,
+                    "event_id": event_id,
+                    "severity": severity,
+                    "type": "network",
+                })
+
+            edges.append({
+                "id": f"e{edge_count}",
+                "source": process_id,
+                "target": network_id,
+            })
+            edge_count += 1
+
+        # File Create
         elif event_id == 11:
-            category = "file"
-            label = event["Process"]
+            file_id = f"file-{target}"
+            if file_id not in node_map:
+                node_map[file_id] = True
+                nodes.append({
+                    "id": file_id,
+                    "label": target.split("\\")[-1],
+                    "process": process,
+                    "time": time,
+                    "event_id": event_id,
+                    "severity": severity,
+                    "type": "file",
+                })
 
-        else:
-            category = "other"
-            label = event["Process"]
-
-        severity = {
-            "process": "High",
-            "dns": "Medium",
-            "network": "Medium",
-            "file": "Low",
-            "other": "Info",
-        }[category]
-
-        nodes.append({
-            "id": node_id,
-            "type": category,
-            "label": label,
-            "severity": severity,
-            "time": event["Time"],
-            "event_id": event_id,
-        })
-
-        # Host → Event
-        edges.append({
-            "id": f"{host_id}-{node_id}",
-            "source": host_id,
-            "target": node_id,
-        })
+            edges.append({
+                "id": f"e{edge_count}",
+                "source": process_id,
+                "target": file_id,
+            })
+            edge_count += 1
 
     return {
         "nodes": nodes,

@@ -17,6 +17,7 @@ interface RouteNode {
   time: string;
   event_id: number;
   severity: string;
+  type: string;   
 }
 
 // Pythonから返ってくるエッジ
@@ -35,74 +36,84 @@ interface AttackGraphProps {
 
 function AttackGraph({ route }: AttackGraphProps) {
   const nodes: Node[] = useMemo(() => {
-    return route.nodes.map((node, index) => {
-      let color = "#64748B";
-
-      if (node.severity === "High") color = "#DC2626";
-      else if (node.severity === "Medium") color = "#F59E0B";
-      else if (node.severity === "Low") color = "#16A34A";
-
-        let x = 240;
-        let y = 120;
-        
-        switch (node.type) {
-          case "host":
-            x = 20;
-            y = 150;
-            break;
-        
-          case "process":
-            x = 260;
-            y = 20;
-            break;
-        
-          case "dns":
-            x = 260;
-            y = 150;
-            break;
-        
-          case "network":
-            x = 520;
-            y = 20;
-            break;
-        
-          case "file":
-            x = 520;
-            y = 180;
-            break;
-        
-          default:
-            x = 260;
-            y = 260;
-        }
-        
-      return {
-        id: node.id,
-        position: { x, y },
-
-        data: {
-          label: (
-            <div style={{ textAlign: "center" }}>
-              <strong>{node.label}</strong>
-              <br />
-              <small>{node.process}</small>
-              <br />
-              {node.time}
-            </div>
-          ),
-        },
-
-        style: {
-          border: `2px solid ${color}`,
-          borderRadius: 12,
-          padding: 8,
-          width: 160,
-          background: "#1E293B",
-          color: "white",
-        },
-      };
-    });
+  return route.nodes.map((node, index) => {
+    let color = "#64748B";
+  
+    if (node.severity === "High") color = "#DC2626";
+    else if (node.severity === "Medium") color = "#F59E0B";
+    else if (node.severity === "Low") color = "#16A34A";
+  
+    let x = 250;
+    let y = index * 120;
+  
+    switch (node.type) {
+      case "host":
+        x = 40;
+        y = 250;
+        break;
+  
+      case "process":
+        x = 320;
+        y = index * 130 + 40;
+        break;
+  
+      case "dns":
+        x = 620;
+        y = index * 130 + 40;
+        break;
+  
+      case "network":
+        x = 900;
+        y = index * 130 + 40;
+        break;
+  
+      case "file":
+        x = 900;
+        y = index * 130 + 220;
+        break;
+    }
+  
+    const icon =
+      node.type === "host"
+        ? "🖥️"
+        : node.type === "process"
+        ? "⚙️"
+        : node.type === "dns"
+        ? "🌐"
+        : node.type === "network"
+        ? "📡"
+        : node.type === "file"
+        ? "📄"
+        : "📍";
+  
+    return {
+      id: node.id,
+      position: { x, y },
+      data: {
+        label: (
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: "20px" }}>{icon}</div>
+  
+            <strong>{node.label}</strong>
+  
+            <br />
+  
+            <small>{node.time}</small>
+          </div>
+        ),
+      },
+      style: {
+        border: `2px solid ${color}`,
+        borderRadius: 12,
+        width: 170,
+        padding: 10,
+        background: "#172033",
+        color: "white",
+      },
+    };
+  });
   }, [route]);
+
 
   const edges: Edge[] = useMemo(() => {
     return route.edges.map((edge) => ({
@@ -119,8 +130,13 @@ function AttackGraph({ route }: AttackGraphProps) {
   }, [route]);
 
   return (
-    <div style={{ width: "100%", height: "450px" }}>
-      <ReactFlow nodes={nodes} edges={edges} fitView>
+    <div style={{ flex: 1, width: "100%"}}>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        fitView
+        fitViewOptions={{ padding: 0.25 }}
+      >
         <Background gap={20} color="#334155" />
         <Controls />
         <MiniMap />

@@ -166,6 +166,23 @@ function App() {
           )}
         </section>
 
+        {/* MITRE ATT&CKカード */}
+        <section className="card mitre-card">
+          <h2>🎯 MITRE ATT&CK</h2>
+          <p>Techniques detected from uploaded logs.</p>
+        </section>
+
+        {/* Attack Graphカード */}
+        <section className="card graph-card">
+          <h2>🗺️ Attack Graph</h2>
+        
+          {events.length === 0 ? (
+            <p>Upload a log to visualize the attack path.</p>
+          ) : (
+            <AttackGraph route={route} />
+          )}
+        </section>
+
         {/* タイムラインカード */}
         <section className="card timeline-card">
           <h2>🕒 Attack Timeline</h2>
@@ -205,21 +222,6 @@ function App() {
             
             </>
           )}
-        </section>
-        {/* Attack Graphカード */}
-        <section className="card graph-card">
-          <h2>🗺️ Attack Graph</h2>
-        
-          {events.length === 0 ? (
-            <p>Upload a log to visualize the attack path.</p>
-          ) : (
-            <AttackGraph route={route} />
-          )}
-        </section>
-        {/* MITRE ATT&CKカード */}
-        <section className="card mitre-card">
-          <h2>🎯 MITRE ATT&CK</h2>
-          <p>Techniques detected from uploaded logs.</p>
         </section>
       </main>
     </div>

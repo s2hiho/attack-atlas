@@ -11,9 +11,10 @@ body {
 }
 
 .app {
-  padding: 32px;
+  width: 100%;
+  min-height: 100vh;
+  padding: 24px 32px;
 }
-
 .header {
   margin-bottom: 32px;
 }
@@ -29,10 +30,10 @@ body {
 
 .dashboard {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
+  align-items: start;
 }
-
 .card {
   background: #1e293b;
   border: 1px solid #334155;
@@ -83,10 +84,12 @@ button:disabled {
 }
 /* タイムラインカードは横スクロール可能にする */
 .timeline-card {
-  overflow-x: auto;
-  min-height: 320px;
+  grid-column: 1 / 4;
+  max-height: 260px;
+  overflow: auto;
+  position: relative;
+  z-index: 1;
 }
-
 /* テーブルがカード幅を超えないようにする */
 .event-table {
   width: 100%;
@@ -127,12 +130,21 @@ button:disabled {
 /* ----------------------------- */
 
 .graph-card {
-  grid-column: 1 / -1; /* グリッドの横幅を全部使う */
+  grid-column: 1 / 4;
+
+  height: 70vh;
   min-height: 650px;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
 }
 
 .graph-card h2 {
-  margin-bottom: 16px;
+  margin: 0;
+  padding: 16px 20px;
+  flex-shrink: 0;
 }
 .react-flow {
   background-color: #0f172a;
