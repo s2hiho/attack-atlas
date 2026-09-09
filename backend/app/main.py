@@ -19,29 +19,50 @@ app.add_middleware(
 def root():
     return {"message": "Attack Atlas API is running!"}
 
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
+
 @app.post("/upload")
-async def upload_log(file: UploadFile = File(...)):
-    content = await file.read()
+async def upload_log(files: list[UploadFile] = File(...)):
+    """
+    複数CSVファイルを受け取り、1つのイベント一覧にまとめる
+    """
 
-    # CSVを解析
-    events = parse_csv(content)
+    all_events = []
+    uploaded_files = []
 
-    # Attack Routeを生成
-    route = build_attack_route(events)
+    # アップロードされたCSVを順番に読み込む
+    for file in files:
+        content = await file.read()
+
+        events = parse_csv(content)
+
+        # どのCSVから来たイベントか分かるようにする
+        for event in events:
+            event["LogFile"] = file.filename
+
+        all_events.extend(events)
+        uploaded_files.append(file.filename)
+
+    # 時系列順に並べ替え（Time列がある前提）
+    all_events.sort(key=lambda x: x.get("Time", ""))
+
+    # Attack Route生成
+    route = build_attack_route(all_events)
 
     # Incident Summary
     summary = {
-        "filename": file.filename,
-        "total_events": len(events),
-        "sources": list({e["Source"] for e in events}),
+        "filenames": uploaded_files,
+        "total_files": len(uploaded_files),
+        "total_events": len(all_events),
+        "sources": sorted(list({e["Source"] for e in all_events})),
     }
 
     return {
         "summary": summary,
-        "events": events,
+        "events": all_events,
         "route": route,
     }

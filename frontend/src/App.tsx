@@ -3,9 +3,8 @@ import "./App.css";
 import AttackGraph from "./components/AttackGraph";
 
 function App() {
-  // ユーザーが選択したログファイルを保存する
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
+  // ユーザーが選択した複数のログファイルを保存する
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   // アップロード結果（ファイル名やサイズ）を画面に表示する
   const [uploadResult, setUploadResult] = useState("");
   
@@ -15,11 +14,21 @@ function App() {
     nodes: [],
     edges: [],
   });
+
   const [summary, setSummary] = useState({
-    filename: "",
+    filenames: [] as string[],
+    total_files: 0,
     total_events: 0,
-    sources: [],
+    sources: [] as string[],
   });
+  
+
+
+
+
+
+
+
   // EventIDから重大度（Severity）を決める関数
   const getSeverity = (eventID: number) => {
     switch (eventID) {
@@ -39,18 +48,18 @@ function App() {
 
   // FastAPIへログファイルを送信する関数
   const uploadFile = async () => {
+    console.log("Selected files:", selectedFiles);
     // ファイルが選択されていなければ処理を止める
-    if (!selectedFile) {
+    if (selectedFiles.length === 0) {
       alert("ファイルを選択してください");
       return;
     }
 
     // ファイルを送るための箱（FormData）を作成
     const formData = new FormData();
-
-    // "file" という名前でファイルを追加
-    // FastAPI側の upload_log(file=...) と対応している
-    formData.append("file", selectedFile);
+    selectedFiles.forEach((file) => {
+      formData.append("files", file);
+    });
 
     try {
       // FastAPIの /upload APIへ POST リクエストを送る
@@ -74,7 +83,7 @@ function App() {
       setRoute(data.route);
       
       // 表示メッセージ
-      setUploadResult(`${data.summary.filename} を読み込みました`);
+      setUploadResult(`${data.summary.total_files} 個のログを読み込みました`);
     } catch (error) {
       // 通信に失敗した場合
       setUploadResult("アップロードに失敗しました。FastAPIが起動しているか確認してください。");
@@ -97,16 +106,28 @@ function App() {
           <h2>📂 Log Upload</h2>
           <p>Upload Windows Event Log, Sysmon, DNS or Firewall logs.</p>
 
+
+
+
+
           {/* ログファイルを選択する */}
           <input
             type="file"
+            multiple
+            accept=".csv"
             onChange={(e) => {
-              if (e.target.files && e.target.files.length > 0) {
-                // 選択した最初のファイルを保存
-                setSelectedFile(e.target.files[0]);
+              if (e.target.files) {
+                setSelectedFiles(Array.from(e.target.files));
               }
             }}
           />
+
+
+
+
+
+
+
 
           {/* FastAPIへアップロード */}
           <button onClick={uploadFile}>Upload Log</button>
@@ -118,22 +139,30 @@ function App() {
         {/* インシデント概要カード */}
         <section className="card summary-card">
           <h2>📊 Incident Summary</h2>
-          {summary.filename === "" ? (
+          {summary.total_files === 0 ? (
             <p>No incident loaded.</p>
           ) : (
             <>
-              <p><strong>Loaded file:</strong> {summary.filename}</p>
-          
-              <p><strong>Total events:</strong> {summary.total_events}</p>
-          
-              <p><strong>Sources:</strong></p>
-          
+              <p><strong>Loaded files:</strong></p>
+            
               <ul>
-                {summary.sources.map((source: string) => (
+                {summary.filenames.map((name) => (
+                  <li key={name}>{name}</li>
+                ))}
+              </ul>
+            
+              <p><strong>Total files:</strong> {summary.total_files}</p>
+            
+              <p><strong>Total events:</strong> {summary.total_events}</p>
+            
+              <p><strong>Sources:</strong></p>
+            
+              <ul>
+                {summary.sources.map((source) => (
                   <li key={source}>{source}</li>
                 ))}
               </ul>
-            </>
+            </>  
           )}
         </section>
 
