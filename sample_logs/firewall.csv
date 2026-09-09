@@ -1,0 +1,5 @@
+Time,EventID,Source,Process,Target,Severity
+2026-09-09 10:01:21,5156,Firewall,powershell.exe,203.0.113.5:443,Medium
+2026-09-09 10:01:36,5156,Firewall,cmd.exe,198.51.100.20:80,Medium
+2026-09-09 10:01:52,5156,Firewall,payload.exe,198.51.100.99:4444,High
+2026-09-09 10:02:10,5156,Firewall,svchost.exe,8.8.8.8:53,Info
