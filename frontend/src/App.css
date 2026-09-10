@@ -159,3 +159,22 @@ button:disabled {
 .react-flow__minimap {
   background: #111827;
 }
+
+/* ReactFlow UI を前面に表示 */
+.react-flow__controls {
+  z-index: 1000 !important;
+  opacity: 1 !important;
+}
+
+.react-flow__controls-button {
+  background: white !important;
+  color: black !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.react-flow__minimap {
+  z-index: 1000 !important;
+  background: #0f172a !important;
+  border: 1px solid #475569 !important;
+  border-radius: 8px !important;
+}

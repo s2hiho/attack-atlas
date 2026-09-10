@@ -4,6 +4,7 @@ import ReactFlow, {
   Controls,
   MiniMap,
   MarkerType,
+  Position,
   useNodesState,
   useEdgesState,
   type Node,
@@ -58,8 +59,11 @@ function AttackGraph({ route }: AttackGraphProps) {
       typeCount[node.type] = (typeCount[node.type] || 0) + 1;
       const order = typeCount[node.type] - 1;
 
-      const x = (columnMap[node.type] ?? 1) * 260 + 40;
-      const y = order * 120 + 40;
+      const COLUMN_GAP = 340; // 横の間隔
+      const ROW_GAP = 160;    // 縦の間隔
+      
+      const x = (columnMap[node.type] ?? 1) * COLUMN_GAP + 60;
+      const y = order * ROW_GAP + 80;
 
       let color = "#64748B";
       let icon = "📍";
@@ -99,6 +103,9 @@ function AttackGraph({ route }: AttackGraphProps) {
       return {
         id: node.id,
         position: { x, y },
+        targetPosition: Position.Left,   // ← 左から受ける
+        sourcePosition: Position.Right,  // ← 右へ出す
+
         draggable: true,
         data: {
           label: (
@@ -185,9 +192,11 @@ function AttackGraph({ route }: AttackGraphProps) {
     <div
       style={{
         width: "100%",
-        height: "800px",
+        height: "90vh",
         background: "#020B2A",
         borderRadius: "16px",
+        overflow: "hidden",
+        position: "relative",
       }}
     >
       <ReactFlow
@@ -202,18 +211,22 @@ function AttackGraph({ route }: AttackGraphProps) {
         elementsSelectable={true}
         panOnDrag={true}
         zoomOnScroll={true}
+        proOptions={{ hideAttribution: true }}
       >
         <Background gap={22} color="#223155" />
 
-        <Controls />
-
+        <Controls position="bottom-left" />
+        {/* 右下のミニマップ */}
         <MiniMap
+          position="bottom-right"
+          zoomable
+          pannable
           nodeColor={(node) => {
             switch (node.id.split(":")[0]) {
-              case "host":
-                return "#DC2626";
               case "user":
                 return "#F59E0B";
+              case "host":
+                return "#DC2626";
               case "process":
                 return "#EA580C";
               case "domain":
@@ -221,7 +234,7 @@ function AttackGraph({ route }: AttackGraphProps) {
               case "ip":
                 return "#10B981";
               case "file":
-                return "#A855F7";
+                return "#9333EA";
               default:
                 return "#64748B";
             }
