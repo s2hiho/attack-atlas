@@ -23,7 +23,34 @@ function App() {
   });
   
 
+  // イベント名を日本語表示する
+  const processName = (process: string) => {
+    const map: Record<string, string> = {
+      "Failed Login": "ログイン失敗",
+      "Successful Login": "ログイン成功",
+      "Privilege Assigned": "管理者権限取得",
+      "DNS Query": "DNS問い合わせ",
+      "Network Connection": "外部通信",
+      "File Create": "ファイル生成",
+      "Process Create": "プロセス生成",
+      "sshd": "SSHログイン",
+    };
+  
+    return map[process] || process;
+  };
 
+  const severityColor = (severity: string) => {
+    switch (severity) {
+      case "High":
+        return "high";
+      case "Medium":
+        return "medium";
+      case "Low":
+        return "low";
+      default:
+        return "info";
+    }
+  };
 
 
 
@@ -162,6 +189,22 @@ function App() {
                   <li key={source}>{source}</li>
                 ))}
               </ul>
+              <hr />
+              
+              <p><strong>Risk Level</strong></p>
+              
+              <div className="risk-legend">
+                <span className="severity high">High</span>
+                <span className="severity medium">Medium</span>
+                <span className="severity low">Low</span>
+                <span className="severity info">Info</span>
+              </div>
+              
+              <caption>
+                High: 認証突破・PowerShell・権限昇格 / Medium: DNS・外部通信 /
+                Low: ログイン成功・BLOCK通信・ファイル生成
+              </caption>
+
             </>  
           )}
         </section>
@@ -195,10 +238,13 @@ function App() {
               <thead>
                 <tr>
                   <th>Time</th>
-                  <th>EventID</th>
-                  <th>Severity</th>
                   <th>Source</th>
-                  <th>Process</th>
+                  <th>Severity</th>
+                  <th>Event</th>
+                  <th>User</th>
+                  <th>Target / IP</th>
+                  <th>Host</th>
+                  <th>Log File</th>
                 </tr>
               </thead>
         
@@ -206,15 +252,24 @@ function App() {
                 {events.map((event, index) => (
                   <tr key={index}>
                     <td>{event.Time}</td>
-                    <td>{event.EventID}</td>
+                  
+                    <td>{event.LogType || event.Source}</td>
+                  
                     <td>
-                      <span className={`severity ${event.Severity.toLowerCase()}`}>
+                      <span className={`severity ${severityColor(event.Severity)}`}>
                         {event.Severity}
                       </span>
                     </td>
-
-                    <td>{event.Source}</td>
-                    <td>{event.Process}</td>
+                  
+                    <td>{processName(event.Process)}</td>
+                  
+                    <td>{event.User || "-"}</td>
+                  
+                    <td>{event.Target || "-"}</td>
+                  
+                    <td>{event.Host || "-"}</td>
+                  
+                    <td>{event.LogFile || "-"}</td>
                   </tr>
                 ))}
               </tbody>

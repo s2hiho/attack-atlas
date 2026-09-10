@@ -5,13 +5,12 @@ Host・Process・DNS・Network を枝分かれした Attack Graph に変換す�
 def build_attack_route(events):
     nodes = []
     edges = []
-    node_map = {}
-    edge_count = 0
 
-    # Windowsホストを最初に追加
-    host_id = "host"
+    node_ids = set()
+
+    # Hostノードを1つ作る
     nodes.append({
-        "id": host_id,
+        "id": "host",
         "label": "Windows Host",
         "process": "",
         "time": "",
@@ -20,102 +19,94 @@ def build_attack_route(events):
         "type": "host",
     })
 
+    node_ids.add("host")
+
+    previous_process = None
+
     for event in events:
+
         process = event.get("Process", "Unknown")
         target = event.get("Target", "")
-        source = event.get("Source", "")
-        event_id = int(event.get("EventID", 0))
-        time = event.get("Time", "")
-        severity = event.get("Severity", "Info")
+        event_id = event.get("EventID", 0)
 
-        # Processノード
-        process_id = f"process-{process}"
-        if process_id not in node_map:
-            node_map[process_id] = True
-            nodes.append({
-                "id": process_id,
-                "label": process,
-                "process": process,
-                "time": time,
-                "event_id": event_id,
-                "severity": severity,
-                "type": "process",
-            })
+        # -------- ノードタイプ判定 --------
+        if event["Source"] == "Security":
+            node_type = "process"
 
+        elif event["Source"] == "auth.log":
+            node_type = "process"
+
+        elif event_id == 22:
+            node_type = "dns"
+
+        elif event_id == 3:
+            node_type = "network"
+
+        elif event_id == 11:
+            node_type = "file"
+
+        else:
+            node_type = "process"
+
+        process_id = f"process-{len(node_ids)}"
+
+        nodes.append({
+            "id": process_id,
+            "label": process,
+            "process": process,
+            "time": event["Time"],
+            "event_id": event_id,
+            "severity": event["Severity"],
+            "type": node_type,
+        })
+
+        # Host → 最初のイベントだけ
+        if previous_process is None:
             edges.append({
-                "id": f"e{edge_count}",
-                "source": host_id,
+                "id": "host-start",
+                "source": "host",
                 "target": process_id,
             })
-            edge_count += 1
 
-        # DNSノード
-        if source == "DNS":
-            dns_id = f"dns-{target}"
-            if dns_id not in node_map:
-                node_map[dns_id] = True
+        # イベント同士を時系列で接続
+        if previous_process is not None:
+            edges.append({
+                "id": f"{previous_process}-{process_id}",
+                "source": previous_process,
+                "target": process_id,
+            })
+
+        previous_process = process_id
+
+        # Target(IP・DNS・File)ノードを追加
+        if target:
+            target_id = f"target-{target}"
+
+            if target_id not in node_ids:
+                target_type = "network"
+
+                if "." in target and ":" not in target:
+                    target_type = "dns"
+
+                if "\\" in target:
+                    target_type = "file"
+
                 nodes.append({
-                    "id": dns_id,
+                    "id": target_id,
                     "label": target,
-                    "process": process,
-                    "time": time,
-                    "event_id": event_id,
-                    "severity": severity,
-                    "type": "dns",
+                    "process": "",
+                    "time": "",
+                    "event_id": 0,
+                    "severity": "Info",
+                    "type": target_type,
                 })
 
-            edges.append({
-                "id": f"e{edge_count}",
-                "source": process_id,
-                "target": dns_id,
-            })
-            edge_count += 1
-
-        # Firewall / Networkノード
-        elif source == "Firewall":
-            network_id = f"net-{target}"
-            if network_id not in node_map:
-                node_map[network_id] = True
-                nodes.append({
-                    "id": network_id,
-                    "label": target,
-                    "process": process,
-                    "time": time,
-                    "event_id": event_id,
-                    "severity": severity,
-                    "type": "network",
-                })
+                node_ids.add(target_id)
 
             edges.append({
-                "id": f"e{edge_count}",
+                "id": f"{process_id}-{target_id}",
                 "source": process_id,
-                "target": network_id,
+                "target": target_id,
             })
-            edge_count += 1
 
-        # File Create
-        elif event_id == 11:
-            file_id = f"file-{target}"
-            if file_id not in node_map:
-                node_map[file_id] = True
-                nodes.append({
-                    "id": file_id,
-                    "label": target.split("\\")[-1],
-                    "process": process,
-                    "time": time,
-                    "event_id": event_id,
-                    "severity": severity,
-                    "type": "file",
-                })
-
-            edges.append({
-                "id": f"e{edge_count}",
-                "source": process_id,
-                "target": file_id,
-            })
-            edge_count += 1
-
-    return {
-        "nodes": nodes,
-        "edges": edges,
-    }
+    return {"nodes": nodes, "edges": edges}

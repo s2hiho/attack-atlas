@@ -17,7 +17,7 @@ interface RouteNode {
   time: string;
   event_id: number;
   severity: string;
-  type: string;   
+  type: string;
 }
 
 // Pythonから返ってくるエッジ
@@ -36,43 +36,71 @@ interface AttackGraphProps {
 
 function AttackGraph({ route }: AttackGraphProps) {
   const nodes: Node[] = useMemo(() => {
-  return route.nodes.map((node, index) => {
+  //typeごとに何個目のノードか数える
+  const typeCount: Record<string, number> = {};
+  return route.nodes.map((node) => {
+    typeCount[node.type] = (typeCount[node.type] || 0) + 1;
+    const order = typeCount[node.type] - 1;
     let color = "#64748B";
-  
-    if (node.severity === "High") color = "#DC2626";
-    else if (node.severity === "Medium") color = "#F59E0B";
-    else if (node.severity === "Low") color = "#16A34A";
-  
-    let x = 250;
-    let y = index * 120;
-  
+    
     switch (node.type) {
       case "host":
-        x = 40;
-        y = 250;
+        color = "#DC2626";
         break;
-  
+    
       case "process":
-        x = 320;
-        y = index * 130 + 40;
+        color = "#EA580C";
         break;
-  
+    
       case "dns":
-        x = 620;
-        y = index * 130 + 40;
+        color = "#2563EB";
         break;
-  
+    
       case "network":
-        x = 900;
-        y = index * 130 + 40;
+        color = "#059669";
         break;
-  
+    
       case "file":
-        x = 900;
-        y = index * 130 + 220;
+        color = "#9333EA";
         break;
     }
   
+    let x = 260;
+    let y = 50;
+    
+    switch (node.type) {
+    
+      case "host":
+        x = 40;
+        y = 280;
+        break;
+    
+      case "process":
+        x = 260;
+        y = 40 + order * 120;
+        break;
+    
+      case "dns":
+        x = 520;
+        y = 60 + order * 140;
+        break;
+    
+      case "network":
+        x = 800;
+        y = 60 + order * 140;
+        break;
+    
+      case "file":
+        x = 800;
+        y = 420 + order * 120;
+        break;
+    
+      default:
+        x = 260;
+        y = 40 + order * 120;
+    }  
+
+
     const icon =
       node.type === "host"
         ? "🖥️"
@@ -104,11 +132,12 @@ function AttackGraph({ route }: AttackGraphProps) {
       },
       style: {
         border: `2px solid ${color}`,
-        borderRadius: 12,
-        width: 170,
+        borderRadius: 14,
         padding: 10,
-        background: "#172033",
-        color: "white",
+        width: 190,
+        background: "#1E293B",
+        color: "#FFFFFF",
+        fontSize: 12,
       },
     };
   });
@@ -130,12 +159,15 @@ function AttackGraph({ route }: AttackGraphProps) {
   }, [route]);
 
   return (
-    <div style={{ flex: 1, width: "100%"}}>
+    <div style={{ width: "100%", height: "700px" }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
         fitView
         fitViewOptions={{ padding: 0.25 }}
+        nodesDraggable={true}
+        nodesConnectable={false}
+        elementsSelectable={true}	
       >
         <Background gap={20} color="#334155" />
         <Controls />
