@@ -6,6 +6,7 @@ from parser.security_parser import parse_security
 from parser.dns_parser import parse_dns
 from parser.firewall_parser import parse_firewall
 from parser.hayabusa_parser import parse_hayabusa
+from parser.authlog_parser import parse_authlog
 
 
 def parse_csv(content: bytes):

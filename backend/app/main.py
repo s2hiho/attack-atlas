@@ -38,7 +38,12 @@ async def upload_log(files: list[UploadFile] = File(...)):
     for file in files:
         content = await file.read()
 
-        events = parse_csv(content)
+        # auth.log はCSVではない
+        if file.filename.endswith(".log"):
+            from parser.authlog_parser import parse_authlog
+            events = parse_authlog(content)
+        else:
+            events = parse_csv(content)
 
         # どのCSVから来たイベントか分かるようにする
         for event in events:

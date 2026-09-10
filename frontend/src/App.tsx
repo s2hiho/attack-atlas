@@ -114,7 +114,7 @@ function App() {
           <input
             type="file"
             multiple
-            accept=".csv"
+            accept=".csv, .log"
             onChange={(e) => {
               if (e.target.files) {
                 setSelectedFiles(Array.from(e.target.files));
