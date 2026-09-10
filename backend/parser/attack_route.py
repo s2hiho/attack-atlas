@@ -2,111 +2,89 @@
 Attack Route Builder v2
 Host・Process・DNS・Network を枝分かれした Attack Graph に変換する。
 """
+from parser.entity_extractor import extract_entities
+
+
 def build_attack_route(events):
+
     nodes = []
     edges = []
 
-    node_ids = set()
-
-    # Hostノードを1つ作る
-    nodes.append({
-        "id": "host",
-        "label": "Windows Host",
-        "process": "",
-        "time": "",
-        "event_id": 0,
-        "severity": "Info",
-        "type": "host",
-    })
-
-    node_ids.add("host")
+    node_map = {}
 
     previous_process = None
 
     for event in events:
 
-        process = event.get("Process", "Unknown")
-        target = event.get("Target", "")
-        event_id = event.get("EventID", 0)
+        entities = extract_entities(event)
 
-        # -------- ノードタイプ判定 --------
-        if event["Source"] == "Security":
-            node_type = "process"
+        process_node = None
 
-        elif event["Source"] == "auth.log":
-            node_type = "process"
+        # ---------- Node生成 ----------
+        for entity in entities:
 
-        elif event_id == 22:
-            node_type = "dns"
+            node_id = f"{entity['type']}:{entity['value']}"
 
-        elif event_id == 3:
-            node_type = "network"
+            if node_id not in node_map:
 
-        elif event_id == 11:
-            node_type = "file"
+                node = {
+                    "id": node_id,
+                    "label": entity["value"],
+                    "type": entity["type"],
+                    "severity": event["Severity"],
+                    "time": event["Time"],
+                    "event_id": event["EventID"]
+                }
 
-        else:
-            node_type = "process"
+                nodes.append(node)
+                node_map[node_id] = node
 
-        process_id = f"process-{len(node_ids)}"
+            # Processノードを保存
+            if entity["type"] == "process":
+                process_node = node_id
 
-        nodes.append({
-            "id": process_id,
-            "label": process,
-            "process": process,
-            "time": event["Time"],
-            "event_id": event_id,
-            "severity": event["Severity"],
-            "type": node_type,
-        })
+        # ---------- Correlation ----------
 
-        # Host → 最初のイベントだけ
-        if previous_process is None:
+        # User → Process
+        user = next((e for e in entities if e["type"] == "user"), None)
+
+        if user and process_node:
+
             edges.append({
-                "id": "host-start",
-                "source": "host",
-                "target": process_id,
+                "id": f"user-{user['value']}-{process_node}",
+                "source": f"user:{user['value']}",
+                "target": process_node,
+                "relation": "login"
             })
 
-        # イベント同士を時系列で接続
-        if previous_process is not None:
+        # Process → Process（時系列）
+        if previous_process and process_node:
+
             edges.append({
-                "id": f"{previous_process}-{process_id}",
+                "id": f"{previous_process}-{process_node}",
                 "source": previous_process,
-                "target": process_id,
+                "target": process_node,
+                "relation": "spawn"
             })
 
-        previous_process = process_id
+        # Process → Target(IP/Domain/File)
+        if process_node:
 
-        # Target(IP・DNS・File)ノードを追加
-        if target:
-            target_id = f"target-{target}"
+            for entity in entities:
 
-            if target_id not in node_ids:
-                target_type = "network"
+                if entity["type"] in ["ip", "domain", "file"]:
 
-                if "." in target and ":" not in target:
-                    target_type = "dns"
+                    edges.append({
+                        "id": f"{process_node}-{entity['type']}:{entity['value']}",
+                        "source": process_node,
+                        "target": f"{entity['type']}:{entity['value']}",
+                        "relation": entity["type"]
+                    })
 
-                if "\\" in target:
-                    target_type = "file"
+        if process_node:
+            previous_process = process_node
 
-                nodes.append({
-                    "id": target_id,
-                    "label": target,
-                    "process": "",
-                    "time": "",
-                    "event_id": 0,
-                    "severity": "Info",
-                    "type": target_type,
-                })
-
-                node_ids.add(target_id)
-
-            edges.append({
-                "id": f"{process_id}-{target_id}",
-                "source": process_id,
-                "target": target_id,
-            })
-
-    return {"nodes": nodes, "edges": edges}
+    return {
+        "nodes": nodes,
+        "edges": edges
+    }
