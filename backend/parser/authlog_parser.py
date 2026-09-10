@@ -36,6 +36,7 @@ def parse_authlog(content: bytes):
                 "Time": accepted.group("time"),
                 "EventID": 4624,
                 "Source": "auth.log",
+                "LogType": "auth.log",
                 "Process": "sshd",
                 "Target": accepted.group("ip"),
                 "Host": "",

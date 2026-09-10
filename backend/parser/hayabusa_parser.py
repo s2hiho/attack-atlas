@@ -26,7 +26,8 @@ def parse_hayabusa(content: bytes):
         events.append({
             "Time": row.get("Timestamp"),
             "EventID": int(row.get("EventID", 0)),
-            "Source": row.get("Channel", "Hayabusa"),
+            "Source": row.get("Channel", "Unknown"),
+	    "LogType": "Hayabusa",
             "Process": row.get("RuleTitle", ""),
             "Target": row.get("Details", ""),
             "Host": row.get("Computer", ""),

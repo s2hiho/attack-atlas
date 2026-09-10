@@ -63,7 +63,7 @@ async def upload_log(files: list[UploadFile] = File(...)):
         "filenames": uploaded_files,
         "total_files": len(uploaded_files),
         "total_events": len(all_events),
-        "sources": sorted(list({e["Source"] for e in all_events})),
+        "sources": sorted(list({e.get("LogType", e.get("Source", "Unknown")) for e in all_events})),
     }
 
     return {

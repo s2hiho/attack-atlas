@@ -50,6 +50,7 @@ def parse_sysmon(content: bytes):
             "Time": row.get("UtcTime") or row.get("Time"),
             "EventID": event_id,
             "Source": "Sysmon",
+            "LogType": "Sysmon",
             "Process": process,
             "Target": target,
             "Host": row.get("Computer", ""),

@@ -36,6 +36,7 @@ def parse_security(content: bytes):
             "Time": row.get("TimeCreated") or row.get("Time"),
             "EventID": event_id,
             "Source": "Security",
+            "LogType": "Security", 
             "Process": process,
             "Target": target,
             "Host": row.get("Computer", ""),

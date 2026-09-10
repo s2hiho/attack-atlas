@@ -20,6 +20,7 @@ def parse_firewall(content: bytes):
             "Time": row.get("Time"),
             "EventID": 5156,
             "Source": "Firewall",
+            "LogType": "Firewall",
             "Process": row.get("Application") or row.get("Process", ""),
             "Target": target,
             "Host": row.get("Host", ""),
