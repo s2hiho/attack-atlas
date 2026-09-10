@@ -8,16 +8,23 @@ def parse_firewall(content: bytes):
     for row in reader:
         ip = row.get("DestinationIp", "")
         port = row.get("DestinationPort", "")
+        action = row.get("Action", "")
+
+        target = f"{ip}:{port}" if port else ip
+
+        severity = "Medium"
+        if action.upper() == "BLOCK":
+            severity = "Low"
 
         events.append({
             "Time": row.get("Time"),
             "EventID": 5156,
             "Source": "Firewall",
             "Process": row.get("Application") or row.get("Process", ""),
-            "Target": f"{ip}:{port}" if port else ip,
+            "Target": target,
             "Host": row.get("Host", ""),
             "User": row.get("User", ""),
-            "Severity": "Medium",
+            "Severity": severity,
         })
 
     return events
