@@ -208,8 +208,8 @@ function App() {
                     <td>{event.Time}</td>
                     <td>{event.EventID}</td>
                     <td>
-                      <span className={`severity ${getSeverity(Number(event.EventID)).toLowerCase()}`}>
-                        {getSeverity(Number(event.EventID))}
+                      <span className={`severity ${event.Severity.toLowerCase()}`}>
+                        {event.Severity}
                       </span>
                     </td>
 

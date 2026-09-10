@@ -1,0 +1,5 @@
+Timestamp,RuleTitle,Level,EventID,Channel,Computer,Details
+2026-09-10 10:00:01,Suspicious PowerShell,high,1,Sysmon,DESKTOP-01,powershell.exe launched with EncodedCommand
+2026-09-10 10:00:05,Possible Brute Force,critical,4625,Security,DESKTOP-01,Administrator failed login from 203.0.113.50
+2026-09-10 10:00:12,DNS Query to Suspicious Domain,medium,22,Sysmon,DESKTOP-01,evil.example.com
+2026-09-10 10:00:20,Network Connection to External IP,medium,3,Sysmon,DESKTOP-01,203.0.113.5:443
