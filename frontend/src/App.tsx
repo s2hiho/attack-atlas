@@ -1,6 +1,8 @@
 import { useState } from "react";
 import "./App.css";
 import AttackGraph from "./components/AttackGraph";
+import deer from "./assets/deer.png";
+import senbei from "./assets/senbei.png";
 
 function App() {
   // ユーザーが選択した複数のログファイルを保存する
@@ -22,7 +24,7 @@ function App() {
     sources: [] as string[],
   });
   
-
+  const [mitre, setMitre] = useState<any[]>([]);
   // イベント名を日本語表示する
   const processName = (process: string) => {
     const map: Record<string, string> = {
@@ -74,17 +76,17 @@ function App() {
 
 
   // FastAPIへログファイルを送信する関数
-  const uploadFile = async () => {
-    console.log("Selected files:", selectedFiles);
+  const uploadFile = async (files: File[]) => {
+    console.log("Selected files:", files);
     // ファイルが選択されていなければ処理を止める
-    if (selectedFiles.length === 0) {
+    if (files.length === 0) {
       alert("ファイルを選択してください");
       return;
     }
 
     // ファイルを送るための箱（FormData）を作成
     const formData = new FormData();
-    selectedFiles.forEach((file) => {
+    files.forEach((file) => {
       formData.append("files", file);
     });
 
@@ -108,7 +110,24 @@ function App() {
       
       // Attack Routeを保存
       setRoute(data.route);
-      
+      // MITRE ATT&CK をイベントから作る
+      const mitreMap: Record<string, { id: string; name: string; tactic: string }> = {
+        "4625": { id: "T1110", name: "Brute Force", tactic: "Credential Access" },
+        "4624": { id: "T1078", name: "Valid Accounts", tactic: "Initial Access" },
+        "1": { id: "T1059", name: "PowerShell Execution", tactic: "Execution" },
+        "3": { id: "T1071", name: "Application Layer Protocol", tactic: "Command & Control" },
+        "22": { id: "T1071", name: "DNS Query", tactic: "Command & Control" },
+      };
+
+const detectedMitre = data.events
+  .map((event: any) => mitreMap[String(event.EventID)])
+  .filter(Boolean)
+  .filter(
+    (item: any, index: number, self: any[]) =>
+      index === self.findIndex((x) => x.id === item.id)
+  );
+
+setMitre(detectedMitre);      
       // 表示メッセージ
       setUploadResult(`${data.summary.total_files} 個のログを読み込みました`);
     } catch (error) {
@@ -122,10 +141,23 @@ function App() {
     <div className="app">
       {/* ヘッダー */}
       <header className="header">
-        <h1>🛡️ Attack Atlas</h1>
-        <p>DFIR Visualization Platform for MWS Hackathon</p>
+        <div className="header-left">
+          <img src={deer} className="logo-deer" />
+      
+          <div className="header-text">
+            <row align=center gap=3 wrap=wrap>
+              <h1>Attack Atlas</h1>
+              <span className="team-badge">Team 鹿せんべい</span>
+            </row>
+      
+            <p>DFIR Visualization Platform for MWS Hackathon</p>
+          </div>
+        </div>
+      
+        <div className="header-right">
+          🦌 ⛰️
+        </div>
       </header>
-
       {/* ダッシュボード */}
       <main className="dashboard">
         {/* ログアップロードカード */}
@@ -142,22 +174,18 @@ function App() {
             type="file"
             multiple
             accept=".csv, .log"
+
             onChange={(e) => {
-              if (e.target.files) {
-                setSelectedFiles(Array.from(e.target.files));
-              }
+              if (!e.target.files) return;
+            
+              const files = Array.from(e.target.files);
+            
+              setSelectedFiles(files); // 選択したファイル名は残す
+              uploadFile(files);       // すぐアップロード
             }}
+
           />
 
-
-
-
-
-
-
-
-          {/* FastAPIへアップロード */}
-          <button onClick={uploadFile}>Upload Log</button>
 
           {/* アップロード結果を表示 */}
           <p>{uploadResult}</p>
@@ -209,12 +237,25 @@ function App() {
           )}
         </section>
 
-        {/* MITRE ATT&CKカード */}
         <section className="card mitre-card">
           <h2>🎯 MITRE ATT&CK</h2>
-          <p>Techniques detected from uploaded logs.</p>
-        </section>
-
+          <img src={senbei} className="senbei-icon"/>
+          {mitre.length === 0 ? (
+            <p>No techniques detected.</p>
+          ) : (
+            mitre.map((item) => (
+              <div className="mitre-item" key={item.id}>
+                <div className="mitre-id">{item.id}</div>
+        
+                <div>
+                  <strong>{item.name}</strong>
+                  <p>{item.tactic}</p>
+                </div>
+              </div>
+            ))
+          )}
+        </section>       
+       
         {/* Attack Graphカード */}
         <section className="card graph-card">
           <h2>🗺️ Attack Graph</h2>
