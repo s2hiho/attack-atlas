@@ -145,11 +145,10 @@ setMitre(detectedMitre);
           <img src={deer} className="logo-deer" />
       
           <div className="header-text">
-            <row align=center gap=3 wrap=wrap>
-              <h1>Attack Atlas</h1>
-              <span className="team-badge">Team 鹿せんべい</span>
-            </row>
-      
+            <div className="header-title-row">
+               <h1>Attack Atlas</h1>
+               <span className="team-badge">Team 鹿せんべい</span>
+             </div>      
             <p>DFIR Visualization Platform for MWS Hackathon</p>
           </div>
         </div>
