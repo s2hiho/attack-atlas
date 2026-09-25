@@ -60,10 +60,11 @@ Attack Atlas はそれらのログから攻撃に関係するイベントをま�
 ## 🛠 技術スタック
 
 | Component           | Technology                |
-| ------------------- | ------------------------- |
+|---------------------|---------------------------|
 | Frontend            | React + Vite + TypeScript |
-| Backend             | FastAPI                   |
+| Backend             | FastAPI + Uvicorn         |
 | Graph Visualization | React Flow                |
+| Timeline            | React Components          |
 | Language            | Python / TypeScript       |
 
 ---
@@ -71,23 +72,11 @@ Attack Atlas はそれらのログから攻撃に関係するイベントをま�
 ## 📁 ディレクトリ構成
 
 ```text
+
 attack-atlas/
-├── backend/
-│   ├── app/
-│   │   └── main.py            # FastAPI API
-│   └── parser/
-│       ├── csv_parser.py      # CSV解析
-│       └── attack_route.py    # Attack Graph生成
-│
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   └── AttackGraph.tsx
-│   │   ├── App.tsx
-│   │   ├── App.css
-│   │   └── index.css
-│   └── package.json
-│
+├── backend/      # FastAPI API
+├── frontend/     # React + Vite UI
+├── sample_logs/  # Sample CSV logs
 └── README.md
 ```
 
@@ -98,8 +87,15 @@ attack-atlas/
 ### 1. Backend
 
 ```bash
-cd backend/app
-uvicorn main:app --reload
+cd backend
+
+#初回のみ
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+#起動
+uvicorn app.main:app --reload
 ```
 
 API Documentation（Swagger）
@@ -114,7 +110,11 @@ http://127.0.0.1:8000/docs
 
 ```bash
 cd frontend
+
+#初回のみ
 npm install
+
+#起動
 npm run dev
 ```
 
@@ -132,65 +132,6 @@ http://localhost:5173
 
 複数ファイルを同時に選択できます。
 
-例
 
-```text
-sysmon.csv
-dns.csv
-firewall.csv
-security.csv
-```
 
-CSV形式（例）
-
-```csv
-Time,EventID,Source,Process,Target,Severity
-2026-09-09 10:01:12,1,Sysmon,powershell.exe,explorer.exe,High
-2026-09-09 10:01:18,22,DNS,powershell.exe,evil.com,Medium
-2026-09-09 10:01:20,3,Firewall,powershell.exe,203.0.113.5:443,Medium
-```
-
----
-
-## 🧭 今後の予定
-
-### DFIRログ対応
-
-* [ ] Hayabusa出力CSV対応
-* [ ] Windows Security.evtx対応
-* [ ] Sysmon.evtx対応
-* [ ] Linux auth.log対応
-* [ ] Firewall / Zeek / Suricataログ対応
-
-### 可視化
-
-* [ ] Google Maps風 Attack Route Builder
-* [ ] MITRE ATT&CK Mapping
-* [ ] IOC一覧（IP・Domain・Hash）
-* [ ] Risk Score自動計算
-* [ ] イベントフィルタ・検索
-
----
-
-## 👥 MWSチーム向けメモ
-
-Attack Atlas は **ログ収集ツールではなく可視化ツール** を目指しています。
-
-想定ワークフロー
-
-```text
-EVTX / auth.log / Firewall Logs
-          │
-          ▼
- Hayabusa / Chainsaw / Parser
-          │
-          ▼
-      CSV / JSON
-          │
-          ▼
-      Attack Atlas
-   (Timeline + Attack Graph)
-```
-
-将来的には複数ログを統合して、攻撃ストーリーを時系列・経路の両方から分析できるようにします。
 
