@@ -1,5 +1,4 @@
-Time,EventID,Source,Process,Target,Severity
-2026-09-09 10:01:12,1,Sysmon,powershell.exe,explorer.exe,High
-2026-09-09 10:01:20,3,Sysmon,powershell.exe,203.0.113.5:443,Medium
-2026-09-09 10:01:28,11,Sysmon,payload.exe,C:\Users\Public\payload.exe,Low
-2026-09-09 10:01:40,10,Sysmon,lsass.exe,powershell.exe,High
+UtcTime,EventID,Image,CommandLine,DestinationIp,DestinationPort,TargetFilename,TargetObject,Computer,User
+2026-09-25T09:01:00Z,1,C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe,powershell.exe -ExecutionPolicy Bypass -File C:\Users\analyst\AppData\Local\Temp\stage.ps1,,,,,WIN-DFIR01,analyst
+2026-09-25T09:04:00Z,1,C:\Windows\System32\cmd.exe,cmd.exe /c C:\Users\analyst\AppData\Local\Temp\run.bat,,,,,WIN-DFIR01,analyst
+2026-09-25T09:05:00Z,1,C:\Users\analyst\AppData\Local\Temp\payload.exe,payload.exe --connect 203.0.113.50:443,203.0.113.50,443,,,WIN-DFIR01,analyst

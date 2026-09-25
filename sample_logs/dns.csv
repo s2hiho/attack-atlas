@@ -1,5 +1,2 @@
-Time,EventID,Source,Process,Target,Severity
-2026-09-09 10:01:18,22,DNS,powershell.exe,evil.com,Medium
-2026-09-09 10:01:22,22,DNS,powershell.exe,cdn.microsoft.com,Info
-2026-09-09 10:01:35,22,DNS,cmd.exe,pastebin.com,Medium
-2026-09-09 10:01:50,22,DNS,payload.exe,c2.attacker.net,High
+Time,QueryName,Process,Host,User
+2026-09-25T09:02:00Z,update-check.example.com,powershell.exe,WIN-DFIR01,analyst

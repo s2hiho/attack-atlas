@@ -33,7 +33,7 @@ def extract_entities(event):
     if target:
 
         # IPアドレス
-        ip_pattern = r"(?:\\d{1,3}\\.){3}\\d{1,3}"
+        ip_pattern = r"(?:\d{1,3}\.){3}\d{1,3}"
 
         if re.fullmatch(ip_pattern, target.split(":")[0]):
             entities.append({

@@ -1,6 +1,0 @@
-UtcTime,EventID,Image,CommandLine,DestinationIp,DestinationPort,TargetFilename,TargetObject,QueryName,Computer,User
-2026-09-10 10:00:01,1,C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe,powershell.exe -EncodedCommand SQBtAG0A,,,,,DESKTOP-01,alice
-2026-09-10 10:00:05,22,C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe,,,,,evil.example.com,DESKTOP-01,alice
-2026-09-10 10:00:10,3,C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe,,203.0.113.5,443,,,DESKTOP-01,alice
-2026-09-10 10:00:15,11,C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe,,,C:\Users\alice\Downloads\payload.exe,,DESKTOP-01,alice
-2026-09-10 10:00:20,13,C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe,,,,HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Updater,,DESKTOP-01,alice

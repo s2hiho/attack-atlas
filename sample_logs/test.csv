@@ -1,4 +1,0 @@
-Time,EventID,Source,Process
-10:01:01,1,Sysmon,powershell.exe
-10:01:02,3,Sysmon,cmd.exe
-10:01:03,22,DNS,evil.com

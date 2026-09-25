@@ -1,5 +1,0 @@
-TimeCreated,EventID,TargetUserName,IpAddress,Computer,PrivilegeList,NewProcessName,CommandLine
-2026-09-10 09:00:00,4625,Administrator,203.0.113.10,DESKTOP-01,,,
-2026-09-10 09:00:08,4624,Administrator,203.0.113.10,DESKTOP-01,,,
-2026-09-10 09:00:10,4672,Administrator,,DESKTOP-01,SeDebugPrivilege,,
-2026-09-10 09:00:15,4688,Administrator,,DESKTOP-01,,C:\Windows\System32\cmd.exe,cmd.exe /c whoami
