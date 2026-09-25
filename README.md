@@ -1,59 +1,16 @@
-# attack-atlas
-Attack Atlas - MWS Cup Hackathon DFIR Visualization Tool
+# attack-atlas🦌🍘
 
-# 🛡️ Attack Atlas
-
-**Attack Atlas** は MWS（Malware/DFIR Workshop）向けに開発している **DFIRログ可視化プラットフォーム** です。
-
-複数種類のログを統合し、攻撃の流れを **Google Maps のように経路として可視化** することを目標にしています。
-
+Attack Atlas は、複数のログから攻撃者の挙動をMITRE ATT&CK に対応付けて、時系列・地図・グラフで可視化する DFIR 支援ツールです。
 ---
 
 ## 🎯 プロジェクト概要
-
-DFIRでは Sysmon・Security Event Log・DNS・Firewall など複数のログを横断して分析する必要があります。
-
-Attack Atlas はそれらのログから攻撃に関係するイベントをまとめ、以下のような情報を一つの画面で表示します。
-
-* 📂 ログアップロード
-* 📊 インシデント概要（Incident Summary）
-* 🕒 攻撃タイムライン（Attack Timeline）
-* 🗺️ 攻撃経路グラフ（Attack Graph）
-* 🎯 MITRE ATT&CK（実装予定）
-
----
-
-## ✨ 現在実装済み（MVP）
-
-* [x] CSVログアップロード
-* [x] 複数CSVファイル同時アップロード
-* [x] Incident Summary表示
-* [x] Attack Timeline表示
-* [x] Attack Graph（React Flow）
-* [x] FastAPI ↔ React連携
-
----
-
-## 📸 画面構成
-
-* **Log Upload**
-
-  * 複数CSVファイルをアップロード
-
-* **Incident Summary**
-
-  * 読み込んだログファイル一覧
-  * イベント数
-  * ログ種類（Source）
-
-* **Attack Timeline**
-
-  * 時系列イベント一覧
-  * Event IDごとのSeverity表示
-
-* **Attack Graph**
-
-  * Host → Process → DNS → Network → File の攻撃経路を可視化
+Attack Atlas は Sysmon、Windows Security Event Log、DNS、Firewall など異なるログを統合し、攻撃ストーリーを一つの画面で分析できることを目的としています。
+主な機能
+・CSV ログアップロード（複数ファイル対応）
+・Incident Summary
+・Attack Timeline
+・Attack Graph（React Flow）
+・MITRE ATT&CK Technique Mapping
 
 ---
 
@@ -126,11 +83,6 @@ http://localhost:5173
 
 ---
 
-## 📄 入力フォーマット（現在）
-
-現在は CSV を入力として利用します。
-
-複数ファイルを同時に選択できます。
 
 
 
