@@ -221,17 +221,21 @@ setMitre(detectedMitre);
               <p><strong>Risk Level</strong></p>
               
               <div className="risk-legend">
-                <span className="severity high">High</span>
-                <span className="severity medium">Medium</span>
-                <span className="severity low">Low</span>
-                <span className="severity info">Info</span>
-              </div>
+                <div className="risk-item">
+                  <span className="severity high">High</span>
+                  <span>認証突破・PowerShell・権限昇格</span>
+                </div>
               
-              <caption>
-                High: 認証突破・PowerShell・権限昇格 / Medium: DNS・外部通信 /
-                Low: ログイン成功・BLOCK通信・ファイル生成
-              </caption>
-
+                <div className="risk-item">
+                  <span className="severity medium">Medium</span>
+                  <span>DNS・外部通信</span>
+                </div>
+              
+                <div className="risk-item">
+                  <span className="severity low">Low</span>
+                  <span>ログイン成功・BLOCK通信・ファイル生成</span>
+                </div>
+              </div>
             </>  
           )}
         </section>

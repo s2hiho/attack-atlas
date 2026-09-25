@@ -317,3 +317,27 @@ button:disabled {
   font-size: 14px;
   font-weight: bold;
 }
+/* Risk Level explanation */
+.risk-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+
+.risk-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.risk-item .severity {
+  flex-shrink: 0;
+}
+
+.risk-item > span:last-child {
+  color: #6b5745;
+}
