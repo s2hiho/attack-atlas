@@ -187,7 +187,13 @@ setMitre(detectedMitre);
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
           >
-            ここにファイルをドラッグ&ドロップ、または クリックして選択
+              {selectedFiles.length > 0 ? (
+              <span>
+                📄 {selectedFiles.map((f) => f.name).join(", ")}
+              </span>
+            ) : (
+              <span>ここにファイルをドラッグ&ドロップ、または クリックして選択</span>
+            )}
             <input
               type="file"
               multiple
