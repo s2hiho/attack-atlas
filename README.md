@@ -86,6 +86,7 @@ http://127.0.0.1:8000/docs
 cd frontend
 
 #初回のみ
+※Node.jsのインストールが必要です
 npm install
 
 #起動
