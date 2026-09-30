@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ReactFlow, {
   Background,
   Controls,
@@ -40,6 +40,14 @@ interface AttackGraphProps {
 }
 
 function AttackGraph({ route }: AttackGraphProps) {
+    // クリックされたノードの詳細情報を保持する
+  const [selectedNode, setSelectedNode] = useState<RouteNode | null>(null);
+
+  // ノードがクリックされたときの処理
+  const handleNodeClick = (_event: React.MouseEvent, node: Node) => {
+    const detail = route.nodes.find((n) => n.id === node.id);
+    if (detail) setSelectedNode(detail);
+  };
   // =============================
   // Backendデータ → ReactFlow Node
   // =============================
@@ -204,6 +212,7 @@ function AttackGraph({ route }: AttackGraphProps) {
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+         onNodeClick={handleNodeClick}
         fitView={false}
         defaultViewport={{ x: 0, y: 0, zoom: 0.9 }}
         nodesDraggable={true}
@@ -241,6 +250,51 @@ function AttackGraph({ route }: AttackGraphProps) {
           }}
         />
       </ReactFlow>
+      {/* ノード詳細パネル */}
+      {selectedNode && (
+        <div
+          style={{
+            position: "absolute",
+            top: 16,
+            right: 16,
+            width: 260,
+            background: "#0F172A",
+            border: "1px solid #475569",
+            borderRadius: 12,
+            padding: 16,
+            color: "white",
+            fontSize: 13,
+            zIndex: 1000,
+            boxShadow: "0 8px 20px rgba(0,0,0,0.4)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 10,
+            }}
+          >
+            <strong style={{ fontSize: 14 }}>ノード詳細</strong>
+            <span
+              onClick={() => setSelectedNode(null)}
+              style={{ cursor: "pointer", color: "#94A3B8" }}
+            >
+              ✕
+            </span>
+          </div>
+
+          <p><strong>Label:</strong> {selectedNode.label}</p>
+          <p><strong>Type:</strong> {selectedNode.type}</p>
+          {selectedNode.process && (
+            <p><strong>Process:</strong> {selectedNode.process}</p>
+          )}
+          <p><strong>Event ID:</strong> {selectedNode.event_id}</p>
+          <p><strong>Severity:</strong> {selectedNode.severity}</p>
+          <p><strong>Time:</strong> {selectedNode.time}</p>
+        </div>
+      )}
     </div>
   );
 }
