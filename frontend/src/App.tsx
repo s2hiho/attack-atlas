@@ -9,6 +9,9 @@ function App() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   // アップロード結果（ファイル名やサイズ）を画面に表示する
   const [uploadResult, setUploadResult] = useState("");
+
+    // ドラッグ中かどうかを判定する
+  const [isDragging, setIsDragging] = useState(false);
   
   // CSVから読み込んだイベント一覧を保存する
   const [events, setEvents] = useState<any[]>([]);
@@ -136,6 +139,16 @@ setMitre(detectedMitre);
       console.error(error);
     }
   };
+  
+  // ファイルがドロップされたときの処理
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length === 0) return;
+    setSelectedFiles(files);
+    uploadFile(files);
+  };
 
   return (
     <div className="app">
@@ -160,31 +173,35 @@ setMitre(detectedMitre);
       {/* ダッシュボード */}
       <main className="dashboard">
         {/* ログアップロードカード */}
-        <section className="card upload-card">
+          <section className="card upload-card">
           <h2>📂 Log Upload</h2>
           <p>Upload Windows Event Log, Sysmon, DNS or Firewall logs.</p>
 
-
-
-
-
-          {/* ログファイルを選択する */}
-          <input
-            type="file"
-            multiple
-            accept=".csv, .log"
-
-            onChange={(e) => {
-              if (!e.target.files) return;
-            
-              const files = Array.from(e.target.files);
-            
-              setSelectedFiles(files); // 選択したファイル名は残す
-              uploadFile(files);       // すぐアップロード
+          {/* ドラッグ&ドロップ対応のアップロード欄 */}
+          <label
+            className={`dropzone ${isDragging ? "dragover" : ""}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
             }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+          >
+            ここにファイルをドラッグ&ドロップ、または クリックして選択
+            <input
+              type="file"
+              multiple
+              accept=".csv, .log"
+              onChange={(e) => {
+                if (!e.target.files) return;
 
-          />
+                const files = Array.from(e.target.files);
 
+                setSelectedFiles(files); // 選択したファイル名は残す
+                uploadFile(files);       // すぐアップロード
+              }}
+            />
+          </label>
 
           {/* アップロード結果を表示 */}
           <p>{uploadResult}</p>
