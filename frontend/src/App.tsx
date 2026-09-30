@@ -1,353 +1,117 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import "./App.css";
 import AttackGraph from "./components/AttackGraph";
+import EventTimeline from "./components/EventTimeline";
+import type { UploadData } from "./types";
 import deer from "./assets/deer.png";
 import senbei from "./assets/senbei.png";
 
+// Existing mapping: UI changes must not change detection.
+const mitreMap: Record<string, { id: string; name: string; tactic: string }> = {
+  "4625": { id: "T1110", name: "Brute Force", tactic: "Credential Access" },
+  "4624": { id: "T1078", name: "Valid Accounts", tactic: "Initial Access" },
+  "1": { id: "T1059", name: "PowerShell Execution", tactic: "Execution" },
+  "3": { id: "T1071", name: "Application Layer Protocol", tactic: "Command & Control" },
+  "22": { id: "T1071", name: "DNS Query", tactic: "Command & Control" },
+};
 function App() {
-  // ユーザーが選択した複数のログファイルを保存する
+  const [data, setData] = useState<UploadData | null>(null);
+  const [revision, setRevision] = useState(0);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  // アップロード結果（ファイル名やサイズ）を画面に表示する
-  const [uploadResult, setUploadResult] = useState("");
-
-    // ドラッグ中かどうかを判定する
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
   const [isDragging, setIsDragging] = useState(false);
-  
-  // CSVから読み込んだイベント一覧を保存する
-  const [events, setEvents] = useState<any[]>([]);
-  const [route, setRoute] = useState({
-    nodes: [],
-    edges: [],
-  });
+  // Lock synchronously, before React renders the disabled input.
+  const uploading = useRef(false);
+  const busy = status === "loading";
+  const mitre = (data?.events ?? []).map(event => mitreMap[String(event.EventID)])
+    .filter(Boolean).filter((item, index, items) => index === items.findIndex(x => x.id === item.id));
 
-  const [summary, setSummary] = useState({
-    filenames: [] as string[],
-    total_files: 0,
-    total_events: 0,
-    sources: [] as string[],
-  });
-  
-  const [mitre, setMitre] = useState<any[]>([]);
-  // イベント名を日本語表示する
-  const processName = (process: string) => {
-    const map: Record<string, string> = {
-      "Failed Login": "ログイン失敗",
-      "Successful Login": "ログイン成功",
-      "Privilege Assigned": "管理者権限取得",
-      "DNS Query": "DNS問い合わせ",
-      "Network Connection": "外部通信",
-      "File Create": "ファイル生成",
-      "Process Create": "プロセス生成",
-      "sshd": "SSHログイン",
-    };
-  
-    return map[process] || process;
-  };
-
-  const severityColor = (severity: string) => {
-    switch (severity) {
-      case "High":
-        return "high";
-      case "Medium":
-        return "medium";
-      case "Low":
-        return "low";
-      default:
-        return "info";
-    }
-  };
-
-
-
-
-
-  // EventIDから重大度（Severity）を決める関数
-  const getSeverity = (eventID: number) => {
-    switch (eventID) {
-      case 1:      // Process Create
-      case 4688:   // Windows Process Create
-        return "High";
-      case 3:      // Network Connection
-      case 22:     // DNS Query
-        return "Medium";
-      case 11:     // File Create
-        return "Low";
-      default:
-        return "Info";
-    }
-  };
-
-
-  // FastAPIへログファイルを送信する関数
-  const uploadFile = async (files: File[]) => {
-    console.log("Selected files:", files);
-    // ファイルが選択されていなければ処理を止める
-    if (files.length === 0) {
-      alert("ファイルを選択してください");
+  async function uploadFiles(files: File[]) {
+    if (uploading.current || files.length === 0) return;
+    if (files.some(file => !/\.(csv|log)$/i.test(file.name))) {
+      setStatus("error");
+      setMessage("CSV または LOG ファイルを選択してください。表示中の結果は保持されています。");
       return;
     }
-
-    // ファイルを送るための箱（FormData）を作成
-    const formData = new FormData();
-    files.forEach((file) => {
-      formData.append("files", file);
-    });
-
-    try {
-      // FastAPIの /upload APIへ POST リクエストを送る
-      const response = await fetch("http://127.0.0.1:8000/upload", {
-        method: "POST",
-        body: formData,
-      });
-      
-      console.log("Status:", response.status);
-
-      // FastAPIから返ってきたJSONを受け取る
-      const data = await response.json();
-      console.log("Response:", data);
-      // Summaryを保存
-      setSummary(data.summary);
-      
-      // イベント一覧を保存
-      setEvents(data.events);
-      
-      // Attack Routeを保存
-      setRoute(data.route);
-      // MITRE ATT&CK をイベントから作る
-      const mitreMap: Record<string, { id: string; name: string; tactic: string }> = {
-        "4625": { id: "T1110", name: "Brute Force", tactic: "Credential Access" },
-        "4624": { id: "T1078", name: "Valid Accounts", tactic: "Initial Access" },
-        "1": { id: "T1059", name: "PowerShell Execution", tactic: "Execution" },
-        "3": { id: "T1071", name: "Application Layer Protocol", tactic: "Command & Control" },
-        "22": { id: "T1071", name: "DNS Query", tactic: "Command & Control" },
-      };
-
-const detectedMitre = data.events
-  .map((event: any) => mitreMap[String(event.EventID)])
-  .filter(Boolean)
-  .filter(
-    (item: any, index: number, self: any[]) =>
-      index === self.findIndex((x) => x.id === item.id)
-  );
-
-setMitre(detectedMitre);      
-      // 表示メッセージ
-      setUploadResult(`${data.summary.total_files} 個のログを読み込みました`);
-    } catch (error) {
-      // 通信に失敗した場合
-      setUploadResult("アップロードに失敗しました。FastAPIが起動しているか確認してください。");
-      console.error(error);
-    }
-  };
-  
-  // ファイルがドロップされたときの処理
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length === 0) return;
+    uploading.current = true;
     setSelectedFiles(files);
-    uploadFile(files);
-  };
-
-  return (
-    <div className="app">
-      {/* ヘッダー */}
-      <header className="header">
-        <div className="header-left">
-          <img src={deer} className="logo-deer" />
-      
-          <div className="header-text">
-            <div className="header-title-row">
-               <h1>Attack Atlas</h1>
-               <span className="team-badge">Team 鹿せんべい</span>
-             </div>      
-            <p>DFIR Visualization Platform for MWS Hackathon</p>
-          </div>
-        </div>
-      
-        <div className="header-right">
-          🦌 ⛰️
-        </div>
-      </header>
-      {/* ダッシュボード */}
-      <main className="dashboard">
-        {/* ログアップロードカード */}
-          <section className="card upload-card">
-          <h2>📂 Log Upload</h2>
-          <p>Upload Windows Event Log, Sysmon, DNS or Firewall logs.</p>
-
-          {/* ドラッグ&ドロップ対応のアップロード欄 */}
-          <label
-            className={`dropzone ${isDragging ? "dragover" : ""}`}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setIsDragging(true);
-            }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={handleDrop}
-          >
-              {selectedFiles.length > 0 ? (
-              <span>
-                📄 {selectedFiles.map((f) => f.name).join(", ")}
-              </span>
-            ) : (
-              <span>ここにファイルをドラッグ&ドロップ、または クリックして選択</span>
-            )}
-            <input
-              type="file"
-              multiple
-              accept=".csv, .log"
-              onChange={(e) => {
-                if (!e.target.files) return;
-
-                const files = Array.from(e.target.files);
-
-                setSelectedFiles(files); // 選択したファイル名は残す
-                uploadFile(files);       // すぐアップロード
-              }}
-            />
-          </label>
-
-          {/* アップロード結果を表示 */}
-          <p>{uploadResult}</p>
-        </section>
-
-        {/* インシデント概要カード */}
-        <section className="card summary-card">
-          <h2>📊 Incident Summary</h2>
-          {summary.total_files === 0 ? (
-            <p>No incident loaded.</p>
-          ) : (
-            <>
-              <p><strong>Loaded files:</strong></p>
-            
-              <ul>
-                {summary.filenames.map((name) => (
-                  <li key={name}>{name}</li>
-                ))}
-              </ul>
-            
-              <p><strong>Total files:</strong> {summary.total_files}</p>
-            
-              <p><strong>Total events:</strong> {summary.total_events}</p>
-            
-              <p><strong>Sources:</strong></p>
-            
-              <ul>
-                {summary.sources.map((source) => (
-                  <li key={source}>{source}</li>
-                ))}
-              </ul>
-              <hr />
-              
-              <p><strong>Risk Level</strong></p>
-              
-              <div className="risk-legend">
-                <div className="risk-item">
-                  <span className="severity high">High</span>
-                  <span>認証突破・PowerShell・権限昇格</span>
-                </div>
-              
-                <div className="risk-item">
-                  <span className="severity medium">Medium</span>
-                  <span>DNS・外部通信</span>
-                </div>
-              
-                <div className="risk-item">
-                  <span className="severity low">Low</span>
-                  <span>ログイン成功・BLOCK通信・ファイル生成</span>
-                </div>
-              </div>
-            </>  
-          )}
-        </section>
-
-        <section className="card mitre-card">
-          <h2>🎯 MITRE ATT&CK</h2>
-          <img src={senbei} className="senbei-icon"/>
-          {mitre.length === 0 ? (
-            <p>No techniques detected.</p>
-          ) : (
-            mitre.map((item) => (
-              <div className="mitre-item" key={item.id}>
-                <div className="mitre-id">{item.id}</div>
-        
-                <div>
-                  <strong>{item.name}</strong>
-                  <p>{item.tactic}</p>
-                </div>
-              </div>
-            ))
-          )}
-        </section>       
-       
-        {/* Attack Graphカード */}
-        <section className="card graph-card">
-          <h2>🗺️ Attack Graph</h2>
-        
-          {events.length === 0 ? (
-            <p>Upload a log to visualize the attack path.</p>
-          ) : (
-            <AttackGraph route={route} />
-          )}
-        </section>
-
-        {/* タイムラインカード */}
-        <section className="card timeline-card">
-          <h2>🕒 Attack Timeline</h2>
-        
-          {events.length === 0 ? (
-            <p>No events loaded.</p>
-          ) : (
-            <>
-            <table className="event-table">
-              <thead>
-                <tr>
-                  <th>Time</th>
-                  <th>Source</th>
-                  <th>Severity</th>
-                  <th>Event</th>
-                  <th>User</th>
-                  <th>Target / IP</th>
-                  <th>Host</th>
-                  <th>Log File</th>
-                </tr>
-              </thead>
-        
-              <tbody>
-                {events.map((event, index) => (
-                  <tr key={index}>
-                    <td>{event.Time}</td>
-                  
-                    <td>{event.LogType || event.Source}</td>
-                  
-                    <td>
-                      <span className={`severity ${severityColor(event.Severity)}`}>
-                        {event.Severity}
-                      </span>
-                    </td>
-                  
-                    <td>{processName(event.Process)}</td>
-                  
-                    <td>{event.User || "-"}</td>
-                  
-                    <td>{event.Target || "-"}</td>
-                  
-                    <td>{event.Host || "-"}</td>
-                  
-                    <td>{event.LogFile || "-"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            
-            </>
-          )}
-        </section>
-      </main>
-    </div>
-  );
+    setStatus("loading");
+    setMessage(files.length + " ファイルを送信・解析中です。完了までお待ちください。");
+    const body = new FormData();
+    files.forEach(file => body.append("files", file));
+    try {
+      const response = await fetch("http://127.0.0.1:8000/upload", {
+        method: "POST", body, signal: AbortSignal.timeout(120_000),
+      });
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      const result: UploadData = await response.json();
+      if (!result.summary || !Array.isArray(result.summary.filenames) ||
+          !Array.isArray(result.summary.sources) || !Array.isArray(result.events) ||
+          !Array.isArray(result.route?.nodes) || !Array.isArray(result.route?.edges)) {
+        throw new Error("応答形式が不正です");
+      }
+      setData(result);
+      setRevision(value => value + 1);
+      setStatus("success");
+      setMessage(result.summary.total_files + " ファイル・" + result.summary.total_events + " 件のイベントを読み込みました。");
+    } catch (error) {
+      setStatus("error");
+      const reason = error instanceof Error && error.name === "TimeoutError"
+        ? "処理がタイムアウトしました。" : "アップロードに失敗しました。";
+      setMessage(reason + " 接続とファイル内容を確認して再試行してください。表示中の結果は保持されています。");
+    } finally {
+      uploading.current = false;
+    }
+  }
+  return <div className="app">
+    <header className="header">
+      <div className="header-left">
+        <img src={deer} className="logo-deer" alt="鹿のマスコット" />
+        <div><div className="header-title-row"><h1>Attack Atlas</h1><span className="team-badge">Team 鹿せんべい</span></div>
+          <p>ログから攻撃の流れをたどる DFIR 可視化ツール</p></div>
+      </div><span className="header-right" aria-hidden="true">🦌 ⛰️</span>
+    </header>
+    <main className="dashboard">
+      <section className="card upload-card" aria-busy={busy}>
+        <h2>📂 ログアップロード</h2>
+        <p>Windows・Sysmon・DNS・Firewall などの CSV / LOG に対応しています。</p>
+        <label className={"dropzone " + (isDragging ? "dragover " : "") + (busy ? "is-disabled" : "")}
+          onDragOver={e => { e.preventDefault(); if (!busy) setIsDragging(true); }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={e => { e.preventDefault(); setIsDragging(false); void uploadFiles(Array.from(e.dataTransfer.files)); }}>
+          <span>{busy ? "🍘 送信・解析中…" : "ここにドラッグ＆ドロップ、またはクリックして選択"}</span>
+          <input type="file" multiple accept=".csv,.log" disabled={busy} aria-label="ログファイルを選択"
+            onChange={e => { const files = Array.from(e.target.files ?? []); e.target.value = ""; void uploadFiles(files); }} />
+        </label>
+        <p className="hint">分析のたびに結果が置き換わります。まとめて分析するファイルは同時に選択してください。</p>
+        {selectedFiles.length > 0 && <div className="file-list"><strong>今回選択したファイル</strong><ul>{selectedFiles.map((file, index) => <li key={index}>{file.name}</li>)}</ul></div>}
+        <p className={"upload-status " + status} role="status" aria-live="polite">{message}</p>
+        {status === "error" && selectedFiles.length > 0 && <button onClick={() => void uploadFiles(selectedFiles)}>前回選択したファイルで再試行</button>}
+      </section>
+      <section className="card summary-card">
+        <h2>📊 インシデント概要</h2>
+        {!data ? <p className="empty-state">ログをアップロードすると概要が表示されます。</p> : <>
+          <div className="stats"><div><strong>{data.summary.total_files}</strong><span>ファイル</span></div><div><strong>{data.summary.total_events}</strong><span>イベント</span></div></div>
+          <div className="file-list"><strong>読み込み済みファイル</strong><ul>{data.summary.filenames.map((name, i) => <li key={i}>{name}</li>)}</ul></div>
+          <p><strong>ログ種別：</strong>{data.summary.sources.join(" / ") || "—"}</p>
+          <p className="hint">重要度はログ解析結果の値を表示しています。</p>
+          <div className="risk-legend">{["High", "Medium", "Low", "Info"].map(value => <span key={value} className={"severity " + value.toLowerCase()}>{value}</span>)}</div>
+        </>}
+      </section>
+      <section className="card mitre-card">
+        <div className="section-heading"><h2>🎯 MITRE ATT&CK</h2><img src={senbei} className="senbei-icon" alt="鹿せんべい" /></div>
+        {mitre.length === 0 ? <p className="empty-state">{data ? "該当するテクニックはありません。" : "ログをアップロードするとテクニックが表示されます。"}</p> : mitre.map(item => <div className="mitre-item" key={item.id}><span className="mitre-id">{item.id}</span><div><strong>{item.name}</strong><p>{item.tactic}</p></div></div>)}
+      </section>
+      <section className="card graph-card">
+        <h2>🗺️ 攻撃グラフ</h2>
+        {!data?.route.nodes.length ? <p className="empty-state">{data ? "表示できるグラフのノードがありません。タイムラインでログを確認してください。" : "ログをアップロードすると攻撃の流れが表示されます。"}</p> : <AttackGraph key={revision} route={data.route} />}
+      </section>
+      <section className="card timeline-card">
+        <h2>🕒 攻撃タイムライン</h2>
+        <EventTimeline key={revision} events={data?.events ?? []} />
+      </section>
+    </main>
+  </div>;
 }
-
 export default App;
