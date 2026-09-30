@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import ReactFlow, {
   Background,
   Controls,
@@ -9,38 +9,20 @@ import ReactFlow, {
   useEdgesState,
   type Node,
   type Edge,
+  type ReactFlowInstance,
 } from "reactflow";
 import "reactflow/dist/style.css";
 
-// -----------------------------
-// Backendから返ってくる型
-// -----------------------------
-interface RouteNode {
-  id: string;
-  label: string;
-  process?: string;
-  time: string;
-  event_id: number;
-  severity: string;
-  type: string;
-}
-
-interface RouteEdge {
-  id: string;
-  source: string;
-  target: string;
-  relation: string;
-}
+import type { RouteNode, UploadData } from "../types";
 
 interface AttackGraphProps {
-  route: {
-    nodes: RouteNode[];
-    edges: RouteEdge[];
-  };
+  route: UploadData["route"];
 }
 
 function AttackGraph({ route }: AttackGraphProps) {
     // クリックされたノードの詳細情報を保持する
+  const [height, setHeight] = useState(520);
+  const [flow, setFlow] = useState<ReactFlowInstance | null>(null);
   const [selectedNode, setSelectedNode] = useState<RouteNode | null>(null);
 
   // ノードがクリックされたときの処理
@@ -52,7 +34,7 @@ function AttackGraph({ route }: AttackGraphProps) {
   // Backendデータ → ReactFlow Node
   // =============================
   const initialNodes: Node[] = useMemo(() => {
-    const typeCount: Record<string, number> = {};
+    const columnCount: Record<number, number> = {};
 
     const columnMap: Record<string, number> = {
       user: 0,
@@ -64,8 +46,9 @@ function AttackGraph({ route }: AttackGraphProps) {
     };
 
     return route.nodes.map((node) => {
-      typeCount[node.type] = (typeCount[node.type] || 0) + 1;
-      const order = typeCount[node.type] - 1;
+      const column = columnMap[node.type] ?? 1;
+      const order = columnCount[column] ?? 0;
+      columnCount[column] = order + 1;
 
       const COLUMN_GAP = 340; // 横の間隔
       const ROW_GAP = 160;    // 縦の間隔
@@ -133,9 +116,10 @@ function AttackGraph({ route }: AttackGraphProps) {
           borderRadius: 14,
           padding: 10,
           width: 190,
-          background: "#1E293B",
-          color: "white",
+          background: "#fffaf1",
+          color: "#4b3621",
           fontSize: 12,
+          overflowWrap: "anywhere",
         },
       };
     });
@@ -145,7 +129,7 @@ function AttackGraph({ route }: AttackGraphProps) {
   // Backendデータ → ReactFlow Edge
   // =============================
   const initialEdges: Edge[] = useMemo(() => {
-    return route.edges.map((edge) => {
+    return route.edges.map((edge, index) => {
       let stroke = "#64748B";
 
       switch (edge.relation) {
@@ -171,7 +155,7 @@ function AttackGraph({ route }: AttackGraphProps) {
       }
 
       return {
-        id: edge.id,
+        id: edge.id + ":" + index,
         source: edge.source,
         target: edge.target,
         animated: true,
@@ -187,34 +171,31 @@ function AttackGraph({ route }: AttackGraphProps) {
   }, [route]);
 
   // ReactFlow State
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, , onNodesChange] = useNodesState(initialNodes);
+  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
 
-  // ログを再アップロードしたらGraph更新
-  useEffect(() => {
-    setNodes(initialNodes);
-    setEdges(initialEdges);
-  }, [initialNodes, initialEdges, setNodes, setEdges]);
-
+  // App remounts this component after each successful upload.
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "90vh",
-        background: "#020B2A",
-        borderRadius: "16px",
-        overflow: "hidden",
-        position: "relative",
-      }}
-    >
+    <>
+      <div className="graph-toolbar">
+        <button onClick={() => void flow?.fitView({ padding: 0.18, minZoom: 0.01, duration: 250 })} disabled={!flow}>全体を表示</button>
+        <label htmlFor="graph-height">グラフの高さ</label>
+        <input id="graph-height" type="range" min="320" max="900" step="20" value={height} onChange={e => setHeight(Number(e.target.value))} />
+        <output htmlFor="graph-height">{height} px</output>
+      </div>
+      <p className="hint">ノードを選択すると詳細を表示します。ドラッグで移動、ホイールで拡大・縮小できます。</p>
+      <div className="graph-surface" style={{ height }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
          onNodeClick={handleNodeClick}
-        fitView={false}
-        defaultViewport={{ x: 0, y: 0, zoom: 0.9 }}
+        onInit={setFlow}
+        fitView
+        minZoom={0.01}
+        fitViewOptions={{ padding: 0.18, minZoom: 0.01 }}
+        deleteKeyCode={null}
         nodesDraggable={true}
         nodesConnectable={false}
         elementsSelectable={true}
@@ -222,9 +203,9 @@ function AttackGraph({ route }: AttackGraphProps) {
         zoomOnScroll={true}
         proOptions={{ hideAttribution: true }}
       >
-        <Background gap={22} color="#223155" />
+        <Background gap={22} color="#d8b98a" />
 
-        <Controls position="bottom-left" />
+        <Controls position="bottom-left" showInteractive={false} fitViewOptions={{ padding: 0.18, minZoom: 0.01 }} />
         {/* 右下のミニマップ */}
         <MiniMap
           position="bottom-right"
@@ -250,53 +231,24 @@ function AttackGraph({ route }: AttackGraphProps) {
           }}
         />
       </ReactFlow>
-      {/* ノード詳細パネル */}
+      </div>
       {selectedNode && (
-        <div
-          style={{
-            position: "absolute",
-            top: 16,
-            right: 16,
-            width: 260,
-            background: "#0F172A",
-            border: "1px solid #475569",
-            borderRadius: 12,
-            padding: 16,
-            color: "white",
-            fontSize: 13,
-            zIndex: 1000,
-            boxShadow: "0 8px 20px rgba(0,0,0,0.4)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 10,
-            }}
-          >
-            <strong style={{ fontSize: 14 }}>ノード詳細</strong>
-            <span
-              onClick={() => setSelectedNode(null)}
-              style={{ cursor: "pointer", color: "#94A3B8" }}
-            >
-              ✕
-            </span>
+        <aside className="node-detail" aria-label="ノード詳細">
+          <div className="section-heading">
+            <h3>ノード詳細</h3>
+            <button onClick={() => setSelectedNode(null)} aria-label="ノード詳細を閉じる">閉じる ✕</button>
           </div>
-
-          <p><strong>Label:</strong> {selectedNode.label}</p>
-          <p><strong>Type:</strong> {selectedNode.type}</p>
-          {selectedNode.process && (
-            <p><strong>Process:</strong> {selectedNode.process}</p>
-          )}
-          <p><strong>Event ID:</strong> {selectedNode.event_id}</p>
-          <p><strong>Severity:</strong> {selectedNode.severity}</p>
-          <p><strong>Time:</strong> {selectedNode.time}</p>
-        </div>
+          <dl className="detail-fields">
+            <div><dt>ラベル</dt><dd>{selectedNode.label}</dd></div>
+            <div><dt>種別</dt><dd>{selectedNode.type}</dd></div>
+            {selectedNode.process && <div><dt>プロセス</dt><dd>{selectedNode.process}</dd></div>}
+            <div><dt>イベントID</dt><dd>{selectedNode.event_id}</dd></div>
+            <div><dt>重要度</dt><dd>{selectedNode.severity}</dd></div>
+            <div><dt>時刻</dt><dd>{selectedNode.time}</dd></div>
+          </dl>
+        </aside>
       )}
-    </div>
+    </>
   );
 }
-
 export default AttackGraph;

@@ -1,381 +1,87 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+.app { min-height: 100vh; padding: 24px 32px; background: linear-gradient(180deg, #f8f3e8, #fdf9f0, #f6efe2); }
+.header { display: flex; justify-content: space-between; align-items: center; gap: 20px; background: #f7ead2; border: 2px solid var(--border); border-radius: 28px; padding: 22px 30px; margin-bottom: 24px; }
+.header-left, .header-title-row { display: flex; align-items: center; gap: 16px; }
+.header-title-row { flex-wrap: wrap; gap: 8px 16px; }
+.header h1 { color: #6f451f; font-size: 2.3rem; line-height: 1.2; }
+.header p { color: var(--muted); margin-top: 8px; }
+.header-right { font-size: 32px; white-space: nowrap; }
+.logo-deer { width: 80px; height: 80px; object-fit: contain; }
+.team-badge { background: #607735; color: white; padding: 5px 14px; border-radius: 999px; font-size: 14px; font-weight: 700; }
+.dashboard { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: start; }
+.card { min-width: 0; background: var(--paper); border: 2px solid var(--border); border-radius: 22px; padding: 24px; box-shadow: 0 8px 20px rgb(139 90 43 / 8%); overflow-wrap: anywhere; }
+.card h2 { color: #7a4d21; font-size: 1.25rem; margin-bottom: 16px; }
+.app button { border: 1px solid var(--accent); border-radius: 999px; padding: 8px 16px; background: var(--accent); color: white; font-weight: 600; }
+.app button:hover:not(:disabled) { background: #6f451f; }
+.hint { color: var(--muted); font-size: .85rem; margin-top: 12px; }
+.empty-state { padding: 16px 0; color: var(--muted); }
+.dropzone { position: relative; margin-top: 16px; border: 2px dashed var(--border); border-radius: 16px; padding: 28px 16px; display: flex; justify-content: center; align-items: center; text-align: center; min-height: 120px; cursor: pointer; }
+.dropzone input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.dropzone:focus-within { outline: 3px solid #486728; outline-offset: 3px; }
+.dropzone.dragover, .dropzone:hover:not(.is-disabled) { background: #f7ead2; border-color: var(--accent); }
+.dropzone.is-disabled { opacity: .65; cursor: wait; }
+.dropzone.is-disabled input { cursor: wait; }
+.file-list { margin: 16px 0; max-height: 150px; overflow: auto; }
+.file-list ul { margin: 6px 0; padding-left: 22px; }
+.upload-status { margin-top: 12px; font-weight: 600; }
+.upload-status.error { color: #a32924; }
+.upload-status.success { color: #3d6529; }
+.stats { display: flex; gap: 32px; }
+.stats div { display: flex; align-items: baseline; gap: 8px; }
+.stats strong { color: #7a4d21; font-size: 2rem; }
+.risk-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.severity { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .8rem; font-weight: 700; white-space: nowrap; }
+.severity.high { background: #fce2df; color: #9c2420; }
+.severity.medium { background: #ffebbd; color: #785000; }
+.severity.low { background: #e3efd8; color: #345f26; }
+.severity.info { background: #e8e9ed; color: #465365; }
+.mitre-card { background: #f8ecd1; border-color: var(--accent); }
+.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.section-heading h2 { margin-bottom: 0; }
+.senbei-icon { width: 56px; height: 56px; object-fit: contain; }
+.mitre-item { display: flex; align-items: center; gap: 14px; background: #fff8ec; border: 1px solid var(--border); border-radius: 16px; padding: 12px; margin-top: 12px; }
+.mitre-item p { color: var(--muted); font-size: .85rem; }
+.mitre-id { background: var(--accent); color: white; padding: 6px 10px; border-radius: 999px; font-weight: 700; flex-shrink: 0; }
+.graph-card, .timeline-card { grid-column: 1 / -1; }
+.graph-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.graph-toolbar input { width: 180px; accent-color: var(--accent); }
+.graph-toolbar output { min-width: 64px; font-variant-numeric: tabular-nums; }
+.graph-surface { width: 100%; margin-top: 16px; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; position: relative; }
+.react-flow { background: #f6efdf; }
+.app .react-flow__controls-button { margin: 0; padding: 5px; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: #fffaf1; color: #4b3621; box-sizing: content-box; }
+.app .react-flow__controls-button:hover { background: #ead9b8; }
+.react-flow__minimap { background: #fffaf1; border: 1px solid var(--border); border-radius: 8px; }
+.node-detail { margin-top: 16px; padding: 20px; background: #f8ecd1; border: 1px solid var(--border); border-radius: 16px; }
+.timeline-filters { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; }
+.timeline-filters label { display: flex; flex: 1 1 140px; min-width: 0; flex-direction: column; gap: 6px; font-size: .85rem; font-weight: 600; }
+.timeline-filters .search-field { flex: 2 1 280px; }
+.timeline-filters input, .timeline-filters select { width: 100%; min-width: 0; height: 42px; padding: 8px 10px; background: #fffdf8; color: #4b3621; border: 1px solid var(--border); border-radius: 10px; }
+.table-scroll { max-height: 540px; overflow: auto; border: 1px solid var(--border); border-radius: 12px; margin-top: 16px; }
+.event-table { width: 100%; min-width: 1050px; border-collapse: separate; border-spacing: 0; font-size: .85rem; }
+.event-table th { position: sticky; top: 0; z-index: 1; text-align: left; background: #8b5a2b; color: white; white-space: nowrap; }
+.event-table th, .event-table td { padding: 12px; border-bottom: 1px solid #e9d9be; }
+.event-table td { max-width: 260px; overflow-wrap: anywhere; vertical-align: top; background: #fffdf8; }
+.event-table tr:nth-child(even) td { background: #f7efe0; }
+.event-table tr:hover td { background: #f2e3c8; }
+.app .compact-button { padding: 4px 12px; white-space: nowrap; }
+.log-dialog { width: min(720px, calc(100vw - 32px)); max-height: 85vh; padding: 24px; border: 2px solid var(--border); border-radius: 22px; background: var(--paper); color: #4b3621; overflow: auto; }
+.log-dialog::backdrop { background: rgb(51 37 23 / 50%); }
+.detail-fields { margin: 16px 0 0; }
+.detail-fields > div { display: grid; grid-template-columns: minmax(100px, 1fr) minmax(0, 3fr); gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.detail-fields dt { font-weight: 700; overflow-wrap: anywhere; }
+.detail-fields dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 1100px) {
+  .dashboard { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mitre-card { grid-column: 1 / -1; }
 }
-
-body {
-  font-family: Inter, sans-serif;
-  background: linear-gradient(
-    180deg,
-    #f8f3e8 0%,
-    #fdf9f0 50%,
-    #f6efe2 100%
-  );
-  color: #4b3621;
-}
-.app {
-  width: 100%;
-  min-height: 100vh;
-  padding: 24px 32px;
-}
-.app{
-  background-image:url("/nara-bg.png");
-  background-repeat:no-repeat;
-  background-position:top center;
-  background-size:cover;
-}
-
-.header h1 {
-  font-size: 2.5rem;
-  margin-bottom: 8px;
-}
-
-.header p {
-  color: #94a3b8;
-}
-
-.dashboard {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  align-items: start;
-}
-.card {
-  background: #fffaf1;
-  border: 2px solid #d8b98a;
-  border-radius: 22px;
-  padding: 20px;
-  box-shadow: 0 8px 20px rgba(139, 90, 43, 0.08);
-}
-.card h2 {
-  color: #7a4d21;
-  font-size: 1.35rem;
-  margin-bottom: 16px;
-}
-button {
-  margin-top: 16px;
-  padding: 12px 20px;
-  border-radius: 999px;
-
-  background: #8b5a2b;
-  color: white;
-
-  font-weight: bold;
-}
-
-button:hover {
-  background: #6f451f;
-}
-button:disabled {
-  background: #475569;
-  cursor: not-allowed;
-}
-
-/* イベント一覧テーブル */
-.event-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 16px;
-}
-
-.event-table th,
-.event-table td{
-  background:#fffdf8;
-  color:#5b4630;
-}
-
-.event-table th{
-  background:#8b5a2b;
-  color:white;
-}
-.event-table tr:nth-child(even){
-  background:#f7efe0;
-}
-/* タイムラインカードは横スクロール可能にする */
-.timeline-card {
-  grid-column: 1 / 4;
-  max-height: 260px;
-  overflow: auto;
-  position: relative;
-  z-index: 1;
-}
-/* テーブルがカード幅を超えないようにする */
-.event-table {
-  width: 100%;
-  min-width: 400px;
-  border-collapse: collapse;
-}
-
-/* Severityバッジ */
-.severity.high {
-  background-color: #dc2626;
-  color: white;
-  animation: pulse-high 1.5s infinite;
-}
-
-@keyframes pulse-high {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
-  }
-}
-
-.severity.high {
-  background-color: #dc2626;
-  color: white;
-}
-
-.severity.medium {
-  background-color: #f59e0b;
-  color: black;
-}
-
-.severity.low {
-  background-color: #16a34a;
-  color: white;
-}
-
-.severity.info {
-  background-color: #64748b;
-  color: white;
-}
-/* ----------------------------- */
-/* Attack Graph カード */
-/* ----------------------------- */
-
-.graph-card {
-  grid-column: 1 / 4;
-
-  height: 70vh;
-  min-height: 650px;
-
-  display: flex;
-  flex-direction: column;
-
-  overflow: hidden;
-}
-
-.graph-card h2 {
-  margin: 0;
-  padding: 16px 20px;
-  flex-shrink: 0;
-}
-.react-flow {
-  background: radial-gradient(
-    circle,
-    #162549 0%,
-    #081222 100%
-  );
-}
-.react-flow__controls {
-  background: #1e293b;
-  border-radius: 10px;
-}
-
-.react-flow__minimap {
-  background: #111827;
-}
-
-/* ReactFlow UI を前面に表示 */
-.react-flow__controls {
-  z-index: 1000 !important;
-  opacity: 1 !important;
-}
-
-.react-flow__controls-button {
-  background: white !important;
-  color: black !important;
-  border: 1px solid #cbd5e1 !important;
-}
-
-.react-flow__minimap {
-  z-index: 1000 !important;
-  background: #0f172a !important;
-  border: 1px solid #475569 !important;
-  border-radius: 8px !important;
-}
-
-/* ========================= */
-/* MITRE ATT&CK (Team 鹿せんべい) */
-/* ========================= */
-
-.mitre-card {
-  background: #f8ecd1;
-  border: 2px solid #8b5a2b;
-  color: #4b3621;
-}
-
-.mitre-card h2 {
-  color: #8b5a2b;
-}
-
-.mitre-item {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: #fff8ec;
-  border: 1px solid #d2b48c;
-  border-radius: 20px;
-  padding: 12px;
-  margin-top: 12px;
-}
-
-.mitre-id {
-  background: #8b5a2b;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 999px;
-  font-weight: bold;
-  min-width: 70px;
-  text-align: center;
-}
-.header {
-  background: #f5e6c8;
-  border-radius: 28px;
-  padding: 18px 28px;
-  margin-bottom: 28px;
-
-  border: 2px solid #d8b98a;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.logo-deer {
-  width: 72px;
-  height: 72px;
-}
-
-.header h1 {
-  color: #6f451f;
-  font-size: 2.2rem;
-}
-
-.team-badge {
-  display: inline-block;
-  margin-top: 6px;
-  padding: 6px 14px;
-
-  border-radius: 999px;
-
-  background: #7a8f43;
-  color: white;
-
-  font-size: 14px;
-}
-.mitre-title-row{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.senbei-icon{
-  width:70px;
-}
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  background: #f7ead2;
-  border: 2px solid #d8b98a;
-  border-radius: 28px;
-  padding: 22px 30px;
-  margin-bottom: 28px;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.header-text p {
-  color: #876646;
-  margin-top: 4px;
-}
-
-.header h1 {
-  color: #6f451f;
-  font-size: 2.3rem;
-  margin: 0;
-}
-
-.header-right {
-  font-size: 36px;
-}
-
-.logo-deer {
-  width: 80px;
-  height: 80px;
-}
-
-.team-badge {
-  background: #70883d;
-  color: white;
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: bold;
-}
-/* Risk Level explanation */
-.risk-legend {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 8px;
-  flex-wrap: wrap;
-  font-size: 12px;
-}
-
-.risk-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-}
-
-.risk-item .severity {
-  flex-shrink: 0;
-}
-
-.risk-item > span:last-child {
-  color: #6b5745;
-}
-
-/* ========================= */
-/* Drag & Drop Upload         */
-/* ========================= */
-
-.dropzone {
-  margin-top: 12px;
-  border: 2px dashed #d8b98a;
-  border-radius: 16px;
-  padding: 28px 16px;
-  text-align: center;
-  color: #876646;
-  cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 80px;
-  line-height: 1.6;
-  font-size: 14px;
-}
-
-.dropzone.dragover {
-  background: #f7ead2;
-  border-color: #8b5a2b;
-}
-
-.dropzone input {
-  display: none;
+@media (max-width: 680px) {
+  .app { padding: 12px; }
+  .header { padding: 16px; }
+  .header-left { gap: 12px; }
+  .header h1 { font-size: 1.6rem; }
+  .header-right { display: none; }
+  .logo-deer { width: 52px; height: 52px; }
+  .dashboard { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .card { padding: 16px; border-radius: 18px; }
+  .react-flow__minimap { display: none; }
+  .detail-fields > div { grid-template-columns: 1fr; gap: 4px; }
 }
