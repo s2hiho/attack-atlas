@@ -45,13 +45,30 @@ attack-atlas/
 
 ```bash
 cd backend
+```
 
-#初回のみ
+**初回のみ(macOS / Linux)**
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+```
 
-#起動
+**初回のみ(Windows / PowerShell)**
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+> **Windowsで「スクリプトの実行が無効になっています」というエラーが出る場合**
+> 以下を一度だけ実行してから、もう一度 `Activate.ps1` を実行してください。
+> ```powershell
+> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+> ```
+
+**起動(共通)**
+```bash
 uvicorn app.main:app --reload
 ```
 
