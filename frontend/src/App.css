@@ -348,3 +348,34 @@ button:disabled {
 .risk-item > span:last-child {
   color: #6b5745;
 }
+
+/* ========================= */
+/* Drag & Drop Upload         */
+/* ========================= */
+
+.dropzone {
+  margin-top: 12px;
+  border: 2px dashed #d8b98a;
+  border-radius: 16px;
+  padding: 28px 16px;
+  text-align: center;
+  color: #876646;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.dropzone.dragover {
+  background: #f7ead2;
+  border-color: #8b5a2b;
+}
+
+.dropzone input {
+  display: none;
+}
